@@ -93,10 +93,10 @@ def filter_stop_not_in_vector():
 	filter stop words and wods not in word vectors 
 	:return: 
 	"""
-	segFile = 'data/root_content_noid_seged_cutall'
-	resFile = 'data/root_content_noid_seged_cutall_filter'
+	segFile = '../data/root_content_noid_seged_filtstop'
+	resFile = '../data/root_content_noid_seged_filtstop_filtvec'
 	# read vocab file
-	vector_vocab = pd.read_table('data/VocabFile', index_col=0, sep='\s+', names=['frequency'])
+	vector_vocab = pd.read_table('../data/VocabFile', index_col=0, sep='\s+', names=['frequency'])
 
 	with codecs.open(segFile, encoding='utf-8', mode='r') as infile:
 		#for i, text in enumerate(infile):
@@ -196,9 +196,8 @@ if __name__ == '__main__':
 	# seg_with_dictionary()
 	# filter_stopwords()
 	# add_vocab_file()
-	# filter_stop_not_in_vector()
-	target_to_462667()
-
+	# target_to_462667()
+	filter_stop_not_in_vector
 
 
 
