@@ -209,11 +209,11 @@ if __name__ == '__main__':
 	'''vectorfile = 'SE-WRL/vectors.bin'
 	outvectorfile = 'vector_mean_v2.bin'
 	average_word_vector(vectorfile, outvectorfile)'''
-	rootdir = './'
+	rootdir = '../'
 	vecfile = rootdir + 'data/vectors_update.bin'
 	vecmeanfile = rootdir + 'data/vector_mean_update.bin'
 	vocabfile = rootdir + 'data/VocabFile'
-	docfile = rootdir + 'data/root_content_noid_seged_filtstop'  # root_content_noid_seged_cutall_filter
+	docfile = rootdir + 'data/root_content_noid_seged_filtstop_filtvec'  # root_content_noid_seged_cutall_filter
 	# 上下文词个数
 	contextnum = 2
 	# 将单词按不同sense重新组合文档
