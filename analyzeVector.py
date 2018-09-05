@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import codecs
 import numpy as np
+import argparse
 # import pandas as pd
 
 
@@ -209,7 +210,37 @@ if __name__ == '__main__':
 	'''vectorfile = 'SE-WRL/vectors.bin'
 	outvectorfile = 'vector_mean_v2.bin'
 	average_word_vector(vectorfile, outvectorfile)'''
-	rootdir = '../'
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-vec", default="../data/vectors_update.bin", help="The sense based word2vec file")
+	parser.add_argument("-vecmean", default="../data/vector_mean_update.bin", help="The mean word2vec file")
+	parser.add_argument("-vocab", default="../data/VocabFile", help="The vocabulary file")
+	parser.add_argument("-doc", default="../data/root_content_noid_seged_filtstop_filtvec", help="The segmented document/corpus file")
+	parser.add_argument("-context", default="2", help="The number of context words")
+	parser.add_argument("-doc_out", default="../data/root_content_noid_seged_filtstop_wordsense",
+						help="The output file with each word represented with the sense word")
+	parser.add_argument("-vec_out", default="null",
+						help="The output vector file with each word splited into sense word vector")
+	parser.add_argument("-vec_out_doc", default="../data/vectors_split_sense_bydoc_notcutall.bin",
+						help="The output vector file with each word splited into sense word vector only contain the words occured in document")
+
+	args = parser.parse_args()
+	vecfile = args.vec
+	vecmeanfile = args.vecmean
+	vocabfile = args.vocab
+	docfile = args.doc
+	# 上下文词个数
+	contextnum = args.context
+	# 将单词按不同sense重新组合文档
+	doc_outfile = args.doc_out
+	# 词向量拆分为每个sense对应一个词向量
+	vec_outfile = args.vec_out
+	# 词向量拆分为每个sense对应一个词向量，仅包含文档中出现的词
+	vec_outfile_bydoc = args.vec_out_doc
+	SenseVec = BuildSenseVec(vecfile, vecmeanfile, vocabfile, docfile, contextnum, doc_outfile, vec_outfile,
+							 vec_outfile_bydoc)
+	SenseVec.build_doc_sense_vec()
+
+	'''rootdir = '../'
 	vecfile = rootdir + 'data/vectors_update.bin'
 	vecmeanfile = rootdir + 'data/vector_mean_update.bin'
 	vocabfile = rootdir + 'data/VocabFile'
@@ -221,9 +252,8 @@ if __name__ == '__main__':
 	# 词向量拆分为每个sense对应一个词向量
 	vec_outfile = rootdir + 'data/vectors_split_sense.bin'
 	# 词向量拆分为每个sense对应一个词向量，仅包含文档中出现的词
-	vec_outfile_bydoc = rootdir + 'data/vectors_split_sense_bydoc_notcutall.bin'
-	SenseVec = BuildSenseVec(vecfile, vecmeanfile, vocabfile, docfile, contextnum, doc_outfile, vec_outfile, vec_outfile_bydoc)
-	SenseVec.build_doc_sense_vec
+	vec_outfile_bydoc = rootdir + 'data/vectors_split_sense_bydoc_notcutall.bin'' '''
+
 	'''att_sense = [8,8,2,8]
 	sense_index = att_sense.index(max(att_sense))
 	print sense_index'''
