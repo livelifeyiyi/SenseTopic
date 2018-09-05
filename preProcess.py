@@ -197,7 +197,7 @@ if __name__ == '__main__':
 	# filter_stopwords()
 	# add_vocab_file()
 	# target_to_462667()
-	filter_stop_not_in_vector
+	filter_stop_not_in_vector()
 
 
 
