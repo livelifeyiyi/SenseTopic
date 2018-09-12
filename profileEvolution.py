@@ -5,6 +5,9 @@ class ProfileEvolution:
 	def __init__(self):
 		pass
 
+	def cost_function(self):
+		pass
+
 	def minimum_Uit(self, user, item_set, time, gamma, eta, lambda_U):
 		# user i,  time t
 		user_h = []  # ..
@@ -18,7 +21,7 @@ class ProfileEvolution:
 		min_Uit = 0.0
 		for item in item_set:
 			# item j
-			min_Uit += self.Y_ijt(user, item, time) * (np.dot(U_it, self.V_j(item)) -self.R_ijt(user, item, time)) * self.V_j(item)
+			min_Uit += self.Y_ijt(user, item, time) * (np.dot(U_it, self.V_j(item)) - self.R_ijt(user, item, time)) * self.V_j(item)
 			+ lambda_U*(self.U_it(user, time)-self.Uit_hat(user, time, gamma_i))
 			+ lambda_U*(1-gamma_i)(self.U_it(user, time+1)-self.Uit_hat(user, time+1, gamma_i))
 			+ lambda_U*sum_userh
@@ -90,3 +93,8 @@ class ProfileEvolution:
 		intersec = list(set(friends_i).intersection(set(friends_h)))
 		L_hit = eta * is_friend + (1-eta) * float(len(intersec)/len(friends_i))
 		return L_hit
+
+
+if __name__ == '__main__':
+	Profile = ProfileEvolution()
+	

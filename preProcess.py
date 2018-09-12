@@ -87,7 +87,6 @@ def filter_stopwords():
 			text = infile.readline()
 
 
-
 def filter_stop_not_in_vector():
 	"""
 	filter stop words and wods not in word vectors 
