@@ -39,6 +39,11 @@ class BuildSubNetwork:
 			line = graphfile.readline()
 			i = 0
 			while line:
+				if i < 3608200:
+					line = graphfile.readline()
+					i += 1
+					continue
+					
 				l = line.strip('\n').strip('\r').split()
 				id1, id2, time = l[0], l[1], l[2]
 				sql = """INSERT INTO graph_170w_1month (`:START_ID`,`:END_ID`, `build_time`) 
