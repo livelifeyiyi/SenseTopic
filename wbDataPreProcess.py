@@ -27,14 +27,14 @@ class SelectUser:
 
 
 class BuildSubNetwork:
-	def __init__(self, selected_user, dbname, pwd):
+	def __init__(self, selected_user, dbip, dbname, pwd):
 		self.selected_user = selected_user
-		conDB = ConnectDB(dbname, pwd)
+		conDB = ConnectDB(dbip, dbname, pwd)
 		self.cursor, self.db = conDB.connect_db()
 
 	def graph_1month_select(self):
 		print("Choosing the randomly selected users and time from 170w users......")
-		with codecs.open("E:/data/social netowrks/weibodata/graph_170w_1month.txt", mode='r', encoding='utf8') as graphfile:
+		with codecs.open("../graph_170w_1month.txt", mode='r', encoding='utf8') as graphfile:  # E:/data/social netowrks/weibodata
 			# with codecs.open("graph_1month_selecteduser.txt", mode='a+', encoding='utf-8') as outfile:
 			line = graphfile.readline()
 			i = 0
@@ -81,12 +81,13 @@ class BuildSubNetwork:
 
 
 class ConnectDB:
-	def __init__(self, dbname, pwd):
+	def __init__(self, dbip, dbname, pwd):
 		self.dbname = dbname
 		self.pwd = pwd
+		self.dbip = dbip
 
 	def connect_db(self):
-		db = MySQLdb.connect("192.168.2.134", "root", "%s" % self.pwd, '%s' % self.dbname, charset='utf8')
+		db = MySQLdb.connect("%s" % self.dbip, "root", "%s" % self.pwd, '%s' % self.dbname, charset='utf8')
 		cursor = db.cursor()
 		# sql = """use %s """ % self.dbname
 		# cursor.execute(sql)
@@ -94,16 +95,18 @@ class ConnectDB:
 
 
 if __name__ == '__main__':
-	'''parser = argparse.ArgumentParser()
+	parser = argparse.ArgumentParser()
 	parser.add_argument("-dbpwd",  help="Password of database")
+	parser.add_argument("-dbIP", help="IP address of database")
 	args = parser.parse_args()
-	pwd = args.dbpwd'''
+	pwd = args.dbpwd
+	dbip = args.dbIP
 
 	SelectUser = SelectUser(select_user_num=10000, all_user_num=1787443)
 	selected_user = SelectUser.random_select_users()
 	with codecs.open('../selected_user.txt', mode='w', encoding='utf-8') as outfile:
 		outfile.write(str(selected_user))
-	BuildSubNetwork = BuildSubNetwork(selected_user, dbname='db_weibodata', pwd='zfeu23=')
+	BuildSubNetwork = BuildSubNetwork(selected_user, dbip=dbip, dbname='db_weibodata', pwd=pwd)
 	BuildSubNetwork.graph_1month_select()
 	BuildSubNetwork.user_relation_select()
 	BuildSubNetwork.user_mid_select()
