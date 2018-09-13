@@ -34,37 +34,36 @@ class BuildSubNetwork:
 
 	def graph_1month_select(self):
 		print("Choosing the randomly selected users and time from 170w users......")
-		with codecs.open("../graph_170w_1month.txt", mode='r', encoding='utf8') as graphfile:
+		with codecs.open("E:/data/social netowrks/weibodata/graph_170w_1month.txt", mode='r', encoding='utf8') as graphfile:
 			# with codecs.open("graph_1month_selecteduser.txt", mode='a+', encoding='utf-8') as outfile:
 			line = graphfile.readline()
 			i = 0
 			while line:
-				if i < 3608200:
+				'''if i < 3608200:
 					line = graphfile.readline()
 					i += 1
-					continue
-					
+					continue'''
 				l = line.strip('\n').strip('\r').split()
 				id1, id2, time = l[0], l[1], l[2]
-				sql = """INSERT INTO graph_170w_1month (`:START_ID`,`:END_ID`, `build_time`) 
+				'''sql = """INSERT INTO graph_170w_1month (`:START_ID`,`:END_ID`, `build_time`) 
 					VALUES (%s, %s, %s) """ % (id1, id2, time)
 				self.cursor.execute(sql)
-				self.db.commit()
-				if (id1 in self.selected_user) and (id2 in self.selected_user):
+				self.db.commit()'''
+				if (int(id1) in self.selected_user) and (int(id2) in self.selected_user):
 					# outfile.write(id1 + '\t' + id2 + '\t' + time + '\n')
 					sql = """INSERT INTO graph_1month_selected (`:START_ID`,`:END_ID`, `build_time`) 
 											VALUES (%s, %s, %s) """ % (id1, id2, time)
 					self.cursor.execute(sql)
 					self.db.commit()
 				line = graphfile.readline()
-				if i % 1000 == 0:
+				if i % 10000 == 0:
 					print str(i) + '-th line finished.'
 				i += 1
-		print("User selection done! graph_1month_selecteduser.txt")
+		print("User selection done! Results saved into table graph_1month_selected")
 
 	def user_relation_select(self):
 		print("Choosing the randomly selected users' network from tb_userrelation......")
-		in_p = ', '.join(self.selected_user)
+		in_p = str(self.selected_user)[1:-1]  # ', '.join(self.selected_user)
 		sql = """ CREATE table tb_userrelation_selected 
 				(SELECT `:START_ID`,`:END_ID`,`TYPE` 
 				FROM tb_userrelation WHERE `:START_ID` IN (%s) AND `:END_ID` IN (%s) )""" % (in_p, in_p)
@@ -73,7 +72,7 @@ class BuildSubNetwork:
 
 	def user_mid_select(self):
 		print("Choosing the randomly selected users and mid from tb_miduserrelation......")
-		in_p = ', '.join(self.selected_user)
+		in_p = str(self.selected_user)[1:-1]
 		sql = """ CREATE table tb_miduserrelation_selected 
 						(SELECT `:START_ID`, `type`, `time`, `:END_ID`, 
 						FROM tb_miduserrelation WHERE `:START_ID` IN (%s) )""" % (in_p)
@@ -95,16 +94,16 @@ class ConnectDB:
 
 
 if __name__ == '__main__':
-	parser = argparse.ArgumentParser()
+	'''parser = argparse.ArgumentParser()
 	parser.add_argument("-dbpwd",  help="Password of database")
 	args = parser.parse_args()
-	pwd = args.dbpwd
+	pwd = args.dbpwd'''
 
 	SelectUser = SelectUser(select_user_num=10000, all_user_num=1787443)
 	selected_user = SelectUser.random_select_users()
 	with codecs.open('../selected_user.txt', mode='w', encoding='utf-8') as outfile:
 		outfile.write(str(selected_user))
-	BuildSubNetwork = BuildSubNetwork(selected_user, dbname='db_weibodata', pwd=pwd)
+	BuildSubNetwork = BuildSubNetwork(selected_user, dbname='db_weibodata', pwd='zfeu23=')
 	BuildSubNetwork.graph_1month_select()
 	BuildSubNetwork.user_relation_select()
 	BuildSubNetwork.user_mid_select()
