@@ -3,6 +3,8 @@ import codecs
 # import pandas as pd
 import random
 import argparse
+import ConnectDB
+
 
 class SelectUser:
 	def __init__(self, select_user_num, all_user_num):
@@ -29,7 +31,7 @@ class SelectUser:
 class BuildSubNetwork:
 	def __init__(self, selected_user, dbip, dbname, pwd):
 		self.selected_user = selected_user
-		conDB = ConnectDB(dbip, dbname, pwd)
+		conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
 		self.cursor, self.db = conDB.connect_db()
 
 	def graph_1month_select(self):
@@ -78,20 +80,6 @@ class BuildSubNetwork:
 						FROM tb_miduserrelation WHERE `:START_ID` IN (%s) )""" % (in_p)
 		self.cursor.execute(sql)
 		self.db.commit()
-
-
-class ConnectDB:
-	def __init__(self, dbip, dbname, pwd):
-		self.dbname = dbname
-		self.pwd = pwd
-		self.dbip = dbip
-
-	def connect_db(self):
-		db = MySQLdb.connect("%s" % self.dbip, "root", "%s" % self.pwd, '%s' % self.dbname, charset='utf8')
-		cursor = db.cursor()
-		# sql = """use %s """ % self.dbname
-		# cursor.execute(sql)
-		return cursor, db
 
 
 if __name__ == '__main__':
