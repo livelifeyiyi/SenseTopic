@@ -4,6 +4,7 @@ import codecs
 import random
 import argparse
 import ConnectDB
+import time
 
 
 class SelectUser:
@@ -76,7 +77,7 @@ class BuildSubNetwork:
 		print("Choosing the randomly selected users and mid from tb_miduserrelation......")
 		in_p = str(self.selected_user)[1:-1]
 		sql = """ CREATE table tb_miduserrelation_selected 
-						(SELECT `:START_ID`, `type`, `time`, `:END_ID`, 
+						(SELECT `:START_ID`, `type`, `time`, `:END_ID` 
 						FROM tb_miduserrelation WHERE `:START_ID` IN (%s) )""" % (in_p)
 		self.cursor.execute(sql)
 		self.db.commit()
@@ -86,15 +87,23 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-dbpwd",  help="Password of database")
 	parser.add_argument("-dbIP", help="IP address of database")
+	parser.add_argument("-users", default='f', help="Choose how to generate selected users, r: randomly generate; f: from file")
 	args = parser.parse_args()
 	pwd = args.dbpwd
 	dbip = args.dbIP
+	users_flag = args.users
 
-	SelectUser = SelectUser(select_user_num=10000, all_user_num=1787443)
-	selected_user = SelectUser.random_select_users()
-	with codecs.open('../selected_user.txt', mode='w', encoding='utf-8') as outfile:
-		outfile.write(str(selected_user))
+	# randomly generate selected user
+	if users_flag == 'r':
+		SelectUser = SelectUser(select_user_num=10000, all_user_num=1787443)
+		selected_user = SelectUser.random_select_users()
+		with codecs.open('../selected_user' + time.time() + '.txt', mode='w', encoding='utf-8') as outfile:
+			outfile.write(str(selected_user))
+
+	# include selected user from file
+	else:
+		from selected_user import selected_user
 	BuildSubNetwork = BuildSubNetwork(selected_user, dbip=dbip, dbname='db_weibodata', pwd=pwd)
-	BuildSubNetwork.graph_1month_select()
-	BuildSubNetwork.user_relation_select()
+	# BuildSubNetwork.graph_1month_select()
+	# BuildSubNetwork.user_relation_select()
 	BuildSubNetwork.user_mid_select()
