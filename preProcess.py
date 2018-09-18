@@ -199,8 +199,8 @@ if __name__ == '__main__':
 	# segFile = '../data/root_content_noid_seged_filtstop'
 	# resFile = '../data/root_content_noid_seged_filtstop_filtvec'
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-s", "segFile", default="../data/root_content_noid_seged_filtstop", help="The seged file")
-	parser.add_argument("-r", "resFile", default="../data/root_content_noid_seged_filtstop_filtvec", help="The file filtered words not in vectors")
+	parser.add_argument("-s", "--segFile", default="../data/root_content_noid_seged_filtstop", help="The seged file")
+	parser.add_argument("-r", "--resFile", default="../data/root_content_noid_seged_filtstop_filtvec", help="The file filtered words not in vectors")
 	args = parser.parse_args()
 	segFile = args.s
 	resFile = args.r
