@@ -154,7 +154,7 @@ class BuildSenseVec:
 							sense_num = len(sense_vecs)
 							if sense_num > 1:
 								context_words = []
-								for x in range(i-int(self.context_num), i+int(self.context_num+1)):
+								for x in range(i-int(self.context_num), i+int(self.context_num)+1):
 									if x != i and 0 <= x < len(words):
 										context_words.append(words[x])
 								sense_index = self.select_attention(context_words, sense_vecs)
