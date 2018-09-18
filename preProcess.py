@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import argparse
 
 import jieba
 import codecs
@@ -87,13 +88,11 @@ def filter_stopwords():
 			text = infile.readline()
 
 
-def filter_stop_not_in_vector():
+def filter_stop_not_in_vector(segFile, resFile):
 	"""
 	filter stop words and wods not in word vectors 
 	:return: 
 	"""
-	segFile = '../data/root_content_noid_seged_filtstop'
-	resFile = '../data/root_content_noid_seged_filtstop_filtvec'
 	# read vocab file
 	vector_vocab = pd.read_table('../data/VocabFile', index_col=0, sep='\s+', names=['frequency'])
 
@@ -196,7 +195,16 @@ if __name__ == '__main__':
 	# filter_stopwords()
 	# add_vocab_file()
 	# target_to_462667()
-	filter_stop_not_in_vector()
+
+	# segFile = '../data/root_content_noid_seged_filtstop'
+	# resFile = '../data/root_content_noid_seged_filtstop_filtvec'
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-s", "segFile", default="../data/root_content_noid_seged_filtstop", help="The seged file")
+	parser.add_argument("-r", "resFile", default="../data/root_content_noid_seged_filtstop_filtvec", help="The file filtered words not in vectors")
+	args = parser.parse_args()
+	segFile = args.s
+	resFile = args.r
+	filter_stop_not_in_vector(segFile, resFile)
 
 
 
