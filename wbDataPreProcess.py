@@ -1,6 +1,6 @@
 import MySQLdb
 import codecs
-# import pandas as pd
+import pandas as pd
 import random
 import argparse
 import ConnectDB
@@ -42,7 +42,7 @@ class BuildSubNetwork:
 			line = graphfile.readline()
 			i = 0
 			while line:
-				'''if i < 3608200:
+				'''if i < 3818593:
 					line = graphfile.readline()
 					i += 1
 					continue'''
@@ -82,28 +82,60 @@ class BuildSubNetwork:
 		self.cursor.execute(sql)
 		self.db.commit()
 
+	def convert_time_format(self, dbip, pwd, dbname):
+		"""
+		covert the String format time in table 'tb_miduserrelation_selected' into time index format 
+		:return: 
+		"""
+		import time
+		from sqlalchemy import create_engine
+		engine = create_engine('mysql://root:%s=@%s/%s?charset=utf8'%(pwd, dbip, dbname))
+		# print time.mktime(time.strptime('2012-09-29 00:00:00', '%Y-%m-%d %H:%M:%S'))
+		init_timestamp = time.mktime(time.strptime('2012-09-29', '%Y-%m-%d'))
+		table = pd.read_sql_table('tb_miduserrelation_selected', engine)
+		time_sequence = table.ix[:, 'time']
+		time_index = []
+		i = 0
+		for each_time in time_sequence:
+			print i
+			i += 1
+			current_timestamp = time.mktime(time.strptime(each_time[0:10], '%Y-%m-%d'))
+			# print each_time, current_timestamp
+			if current_timestamp < init_timestamp:
+				time_index.append(0)
+			else:
+				time_index.append(((current_timestamp - init_timestamp) / 86400) + 1)
+		table.insert(4, 'time_index', time_index, allow_duplicates=True)
+		table.to_sql('tb_miduserrelation_selected_time', engine, if_exists='replace', index=False)
+
+		print("Table replacement finished!")
+
 
 if __name__ == '__main__':
-	parser = argparse.ArgumentParser()
-	parser.add_argument("-dbpwd",  help="Password of database")
-	parser.add_argument("-dbIP", help="IP address of database")
-	parser.add_argument("-users", default='f', help="Choose how to generate selected users, r: randomly generate; f: from file")
-	args = parser.parse_args()
-	pwd = args.dbpwd
-	dbip = args.dbIP
-	users_flag = args.users
 
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-p", "--DB_password",  help="Password of database")
+	parser.add_argument("-i", "--DB_IP_address", help="IP address of database")
+	parser.add_argument("-u", "--users_generate", default='f', help="Choose how to generate selected users, r: randomly generate; f: from file")
+	args = parser.parse_args()
+	pwd = args.DB_password
+	dbip = args.DB_IP_address
+	users_flag = args.users_generate
+	dbname = 'db_weibodata'
 	# randomly generate selected user
 	if users_flag == 'r':
 		SelectUser = SelectUser(select_user_num=10000, all_user_num=1787443)
 		selected_user = SelectUser.random_select_users()
-		with codecs.open('../selected_user' + time.time() + '.txt', mode='w', encoding='utf-8') as outfile:
+		with codecs.open('../selected_user_' + str(time.time()) + '.txt', mode='w', encoding='utf-8') as outfile:
 			outfile.write(str(selected_user))
 
 	# include selected user from file
 	else:
 		from selected_user import selected_user
-	BuildSubNetwork = BuildSubNetwork(selected_user, dbip=dbip, dbname='db_weibodata', pwd=pwd)
-	# BuildSubNetwork.graph_1month_select()
-	# BuildSubNetwork.user_relation_select()
+	
+	BuildSubNetwork = BuildSubNetwork(selected_user, dbip=dbip, dbname=dbname, pwd=pwd)
+	BuildSubNetwork.graph_1month_select()
+	BuildSubNetwork.user_relation_select()
 	BuildSubNetwork.user_mid_select()
+
+	BuildSubNetwork.convert_time_format(dbip, pwd, dbname)
