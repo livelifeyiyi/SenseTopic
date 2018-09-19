@@ -44,7 +44,8 @@ class ProfileEvolution:
 				Uit = self.minimum_Uit(user, time, gamma, eta, lambda_U)
 				self.update_U_it(Uit, user, time)
 		print("Saving user interest U into file......")
-		np.save('U_user_interest.npy', self.user_interest)
+		np.save('../output/U_user_interest.npy', self.user_interest)
+		np.save('../output/U_user_interest_hat.npy', self.user_interest_Uit_hat)
 		# for j in self.doc_num(M)
 
 	def minimum_Uit(self, user, time, gamma, eta, lambda_U):  # , item_set
