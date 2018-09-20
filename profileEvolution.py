@@ -76,8 +76,8 @@ class ProfileEvolution:
 				min_Uit = np.add(min_Uit, lambda_U*(1-gamma_i)*(self.U_it(user_id, time+1)-self.Uit_hat(user, time+1, gamma_i)))
 				min_Uit = np.add(min_Uit, lambda_U*sum_userh)
 
-			min_Uit += self.learning_rate * min_Uit
-			if np.isnan(min_Uit):
+			min_Uit = np.add(min_Uit, self.learning_rate * min_Uit)
+			if np.isnan(np.sum(min_Uit)):
 				return self.user_interest[time][:, user_id]
 			self.update_U_it(min_Uit, user_id, time)
 			print min_Uit
