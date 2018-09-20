@@ -35,13 +35,15 @@ class ProfileEvolution:
 		# initialize user interest score: U
 		self.user_interest = np.ones((self.time_num, self.D, self.user_num))
 		self.user_interest_Uit_hat = np.ones((self.time_num, self.D, self.user_num))
+		self.gamma = np.ones(self.user_num)
+		self.eta = np.ones(self.user_num)
 
-	def SGD_Uit(self, gamma, eta, lambda_U):
+	def SGD_Uit(self, lambda_U):
 		for time in range(1, self.time_num+1):  # t in time_sequence; count from 1
 			for user_id in range(self.user_num):  # i in (N)
 				user = selected_user[user_id]		# get the user id
 				print("Processing user " + str(user) + " with id number " + str(user_id) + " at time " + str(time) + "......")
-				Uit = self.minimum_Uit(user, time, gamma, eta, lambda_U)
+				Uit = self.minimum_Uit(user, time, self.gamma, self.eta, lambda_U)
 				self.update_U_it(Uit, user, time)
 		print("Saving user interest U into file......")
 		np.save('../output/U_user_interest.npy', self.user_interest)
@@ -82,14 +84,20 @@ class ProfileEvolution:
 			print min_Uit
 		return min_Uit
 
-	def PGD_gamma_eta(self):
+	def PGD_gamma_eta(self, lambda_U):
 		for user_id in range(self.user_num):  # i in (N)
 			user = selected_user[user_id]  # get the user
 			print("Processing user " + str(user) + " with id number " + str(user_id) + "......")
-			gamma_i = self.minimum_gamma(user)
-		pass
+			gamma_i = self.minimum_gamma(user, lambda_U, self.eta)
+			self.gamma[user_id] = gamma_i
+			eta_i = self.minimum_eta(user, lambda_U, self.gamma)
+			self.eta[user_id] = eta_i
 
-	def minimum_gamma(self, user, lambda_U):
+		print("Saving parameter gamma, eta into file......")
+		np.save('../output/gamma.npy', self.gamma)
+		np.save('../output/eta.npy', self.eta)
+
+	def minimum_gamma(self, user, lambda_U, eta):
 		# user i
 		user_id = selected_user.index(user)
 		sum_t = 0.0
@@ -109,7 +117,8 @@ class ProfileEvolution:
 			min_target = lambda_U * sum_t
 			# gamma_i -= self.learning_rate*min_target
 			gamma_i = self.pi_x(gamma_i-self.learning_rate*min_target)
-			print gamma_i
+			print "gamma: " + str(gamma_i)
+		return gamma_i
 
 	def pi_x(self, x):
 		res = []
@@ -122,22 +131,28 @@ class ProfileEvolution:
 		sum_t = 0.0
 		gamma_i = gamma[user_i]
 		uid_i = selected_user.index(user_i)
-		for t in range(1, self.time_num+1):
-			neighbors_i = self.neighbors(user_i, t - 1, 0)
-			sum_h = 0.0
-			for user_h in neighbors_i:
-				uid_h = selected_user.index(user_h)
-				is_friend = 0  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
-				friends_i = self.neighbors(user_i, t, 1)
-				friends_h = self.neighbors(user_h, t, 1)
-				intersec = list(set(friends_i).intersection(set(friends_h)))
-				sum_h += (is_friend - float(len(intersec) / len(friends_i))) * self.user_interest[t-1][:, uid_h]  # self.U_it(user_h, t-1)
+		eta_i = 1.0
+		for iter in range(self.max_iter):
+			print("Iteration: " + str(iter))
+			for t in range(1, self.time_num+1):
+				neighbors_i = self.neighbors(user_i, t - 1, 0)
+				sum_h = 0.0
+				for user_h in neighbors_i:
+					uid_h = selected_user.index(user_h)
+					is_friend = 0  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
+					friends_i = self.neighbors(user_i, t, 1)
+					friends_h = self.neighbors(user_h, t, 1)
+					intersec = list(set(friends_i).intersection(set(friends_h)))
+					sum_h += (is_friend - float(len(intersec) / len(friends_i))) * self.user_interest[t-1][:, uid_h]  # self.U_it(user_h, t-1)
 
-			# sum_t += (self.Uit_hat(user_i, t, gamma_i) - self.U_it(user_i, t)) * (gamma_i * sum_h + (1-gamma_i) * self.U_it(user_, t-1))
-			sum_t += (self.user_interest_Uit_hat[t][:, uid_i] -
-					  self.user_interest[t][:, uid_i] * (gamma_i * sum_h + (1 - gamma_i) * self.user_interest[t-1][:, uid_i]))
+				# sum_t += (self.Uit_hat(user_i, t, gamma_i) - self.U_it(user_i, t)) * (gamma_i * sum_h + (1-gamma_i) * self.U_it(user_, t-1))
+				sum_t += (self.user_interest_Uit_hat[t][:, uid_i] -
+						  self.user_interest[t][:, uid_i] * (gamma_i * sum_h + (1 - gamma_i) * self.user_interest[t-1][:, uid_i]))
 
-		min_target = lambda_U * sum_t
+			min_target = lambda_U * sum_t
+			eta_i = self.pi_x(eta_i - self.learning_rate * min_target)
+			print "eta: " + str(eta_i)
+		return eta_i
 
 	def Y_R_ijt(self, user_i, item_j, time):
 		# Y_ijt = 1 if user_i has a link with item_j at time t, else=0
@@ -187,7 +202,7 @@ class ProfileEvolution:
 		sum_h = 0.0
 		for h in neighbors_i:
 			index_h = selected_user.index(h)
-			eta_h = eta[index_h]
+			eta_h = self.eta[index_h]
 			sum_h += self.L_hit(h, user, time-1, eta_h) * self.U_it(index_h, time-1)
 		Uit_hat = (1-gamma_i) * self.U_it(selected_user.index(user), time-1) + gamma_i * sum_h
 		self.user_interest_Uit_hat[time][:, selected_user.index(user)] = Uit_hat
@@ -274,8 +289,11 @@ if __name__ == '__main__':
 	Profile = ProfileEvolution(dbip=dbip, dbname='db_weibodata', pwd=pwd, topic_file=topic_file, mid_dir=mid_dir,
 							   learning_rate=learning_rate, minibatch=minibatch, max_iter=max_iteration,
 							   feature_dimension=feature_dimension, user_num=user_num, time_num=time_num)
-	gamma = np.array([0.5 for i in range(user_num)])
-	eta = np.array([0.5 for i in range(user_num)])
+	# gamma = np.array([0.5 for i in range(user_num)])
+	# eta = np.array([0.5 for i in range(user_num)])
 	lambda_U = 0.3
-	Profile.SGD_Uit(gamma, eta, lambda_U)
+	for i in range(5):
+		print(str(i) + "-th round......")
+		Profile.SGD_Uit(lambda_U)
+		Profile.PGD_gamma_eta(lambda_U)
 	# Profile.Y_R_ijt(1227898, 3361644068075147, '2011-11-02-11:18:14')
