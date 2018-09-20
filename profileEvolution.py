@@ -77,6 +77,8 @@ class ProfileEvolution:
 				min_Uit = np.add(min_Uit, lambda_U*sum_userh)
 
 			min_Uit += self.learning_rate * min_Uit
+			if np.isnan(min_Uit):
+				return self.user_interest[time][:, user_id]
 			self.update_U_it(min_Uit, user_id, time)
 			print min_Uit
 		return min_Uit
@@ -228,19 +230,31 @@ if __name__ == '__main__':
 	parser.add_argument("-dbpwd", help="Password of database")
 	parser.add_argument("-dbIP", help="IP address of database")
 	parser.add_argument("-topicFile", help="Topic assignment file")
-	parser.add_argument("-mid_dir", help= "The dictionary of mid-id map file")
+	parser.add_argument("-mid_dir", help="The dictionary of mid-id map file")
+	parser.add_argument("-l", "--learning_rate", default=0.001, help="The learning rate of SGD for Uit")
+	parser.add_argument("-b", "--minibatch", default=1000, help="Number of minibatch of SGD (subset of documents)")
+	parser.add_argument("-i", "--max_iteration", default=1000, help="The max iteration of SGD")
+	parser.add_argument("-f", "--feature_dimension", default=50, help="Dimension of features (topic number)")
+	parser.add_argument("-u", "--user_num", default=10000, help="Number of users to build subnetwork")
+	parser.add_argument("-t", "--time_num", default=30, help="Number of time sequence")
+
 	args = parser.parse_args()
 	pwd = args.dbpwd
 	dbip = args.dbIP
 	topic_file = args.topicFile
 	mid_dir = args.mid_dir
+	learning_rate = args.learning_rate
+	minibatch = args.minibatch
+	max_iteration = args.max_iteration
+	feature_dimension = args.feature_dimension
+	user_num = args.user_num
+	time_num = args.time_num
 
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
-	user_num = 10000
-	Profile = ProfileEvolution(dbip=dbip, dbname='db_weibodata', pwd=pwd, topic_file=topic_file, mid_dir=mid_dir, learning_rate=0.01,
-							   minibatch=1000, max_iter=1000, feature_dimension=50, user_num=user_num, time_num=30)
-
+	Profile = ProfileEvolution(dbip=dbip, dbname='db_weibodata', pwd=pwd, topic_file=topic_file, mid_dir=mid_dir,
+							   learning_rate=learning_rate, minibatch=minibatch, max_iter=max_iteration,
+							   feature_dimension=feature_dimension, user_num=user_num, time_num=time_num)
 	gamma = np.array([0.5 for i in range(user_num)])
 	eta = np.array([0.5 for i in range(user_num)])
 	lambda_U = 0.3
