@@ -7,16 +7,16 @@ from selected_user import selected_user
 
 
 class ProfileEvolution:
-	def __init__(self, dbip, dbname, pwd, topic_file, mid_dir, learning_rate=0.01, minibatch=1000, max_iter=1000, feature_dimension=50, user_num=10000, time_num=30):
+	def __init__(self, dbip, dbname, pwd, topic_file, mid_dir, learning_rate, minibatch, max_iter, feature_dimension, user_num, time_num):
 		self.D = feature_dimension
 		conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
 		self.cursor, self.db = conDB.connect_db()
 		self.topic_file = topic_file  # M*1
-		self.user_num = user_num
-		self.time_num = time_num
-		self.max_iter = max_iter
-		self.minibatch = minibatch
-		self.learning_rate = learning_rate
+		self.user_num = int(user_num)
+		self.time_num = int(time_num)
+		self.max_iter = int(max_iter)
+		self.minibatch = int(minibatch)
+		self.learning_rate = float(learning_rate)
 		self.mid_dir = mid_dir
 		self.item_mid_map = np.loadtxt(self.mid_dir)
 		print("Reading the topic assignment file......")
