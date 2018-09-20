@@ -38,7 +38,7 @@ class ProfileEvolution:
 		self.gamma = np.ones(self.user_num)
 		self.eta = np.ones(self.user_num)
 
-	def SGD_Uit(self, lambda_U):
+	def SGD_Uit(self, lambda_U, round_num):
 		for time in range(1, self.time_num+1):  # t in time_sequence; count from 1
 			for user_id in range(self.user_num):  # i in (N)
 				user = selected_user[user_id]		# get the user id
@@ -46,8 +46,8 @@ class ProfileEvolution:
 				Uit = self.minimum_Uit(user, time, self.gamma, self.eta, lambda_U)
 				self.update_U_it(Uit, user, time)
 		print("Saving user interest U into file......")
-		np.save('../output/U_user_interest.npy', self.user_interest)
-		np.save('../output/U_user_interest_hat.npy', self.user_interest_Uit_hat)
+		np.save('../output/U_user_interest_' + str(round_num) + '.npy', self.user_interest)
+		np.save('../output/U_user_interest_hat_' + str(round_num) + '.npy', self.user_interest_Uit_hat)
 		# for j in self.doc_num(M)
 
 	def minimum_Uit(self, user, time, gamma, eta, lambda_U):  # , item_set
@@ -84,7 +84,7 @@ class ProfileEvolution:
 			print min_Uit
 		return min_Uit
 
-	def PGD_gamma_eta(self, lambda_U):
+	def PGD_gamma_eta(self, lambda_U, round_num):
 		for user_id in range(self.user_num):  # i in (N)
 			user = selected_user[user_id]  # get the user
 			print("Processing user " + str(user) + " with id number " + str(user_id) + "......")
@@ -94,8 +94,8 @@ class ProfileEvolution:
 			self.eta[user_id] = eta_i
 
 		print("Saving parameter gamma, eta into file......")
-		np.save('../output/gamma.npy', self.gamma)
-		np.save('../output/eta.npy', self.eta)
+		np.save('../output/gamma_' + str(round_num) + '.npy', self.gamma)
+		np.save('../output/eta_' + str(round_num) + '.npy', self.eta)
 
 	def minimum_gamma(self, user, lambda_U, eta):
 		# user i
@@ -294,6 +294,6 @@ if __name__ == '__main__':
 	lambda_U = 0.3
 	for i in range(5):
 		print(str(i) + "-th round......")
-		Profile.SGD_Uit(lambda_U)
-		Profile.PGD_gamma_eta(lambda_U)
+		Profile.SGD_Uit(lambda_U, i)
+		Profile.PGD_gamma_eta(lambda_U, i)
 	# Profile.Y_R_ijt(1227898, 3361644068075147, '2011-11-02-11:18:14')
