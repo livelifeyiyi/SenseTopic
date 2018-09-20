@@ -76,7 +76,7 @@ class ProfileEvolution:
 				min_Uit = np.add(min_Uit, lambda_U*(1-gamma_i)*(self.U_it(user_id, time+1)-self.Uit_hat(user, time+1, gamma_i)))
 				min_Uit = np.add(min_Uit, lambda_U*sum_userh)
 
-			min_Uit = np.add(min_Uit, self.learning_rate * min_Uit)
+			min_Uit = min_Uit - self.learning_rate * min_Uit  # )np.add
 			if np.isnan(np.sum(min_Uit)):
 				return self.user_interest[time][:, user_id]
 			self.update_U_it(min_Uit, user_id, time)
@@ -114,7 +114,7 @@ class ProfileEvolution:
 				intersec = list(set(friends_i).intersection(set(friends_h)))
 				sum_h += (is_friend - float(len(intersec) / len(friends_i))) * self.user_interest[t-1][:, uid_h]  # self.U_it(user_h, t-1)
 
-			#sum_t += (self.Uit_hat(user_i, t, gamma_i) - self.U_it(user_i, t)) * (gamma_i * sum_h + (1-gamma_i) * self.U_it(user_, t-1))
+			# sum_t += (self.Uit_hat(user_i, t, gamma_i) - self.U_it(user_i, t)) * (gamma_i * sum_h + (1-gamma_i) * self.U_it(user_, t-1))
 			sum_t += (self.user_interest_Uit_hat[t][:, uid_i] -
 					  self.user_interest[t][:, uid_i] * (gamma_i * sum_h + (1 - gamma_i) * self.user_interest[t-1][:, uid_i]))
 
