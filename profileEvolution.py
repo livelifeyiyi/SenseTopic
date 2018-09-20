@@ -71,39 +71,58 @@ class ProfileEvolution:
 				# item j
 				uid_time = self.U_it(user_id, time)
 				v_j_item = self.V_j(item)
-				min_Uit = np.add(min_Uit, Y_ijt * (np.dot(uid_time, v_j_item) - R_ijt) *v_j_item)
-				min_Uit = np.add(min_Uit, lambda_U*(uid_time-self.Uit_hat(user, time, gamma_i)))
-				min_Uit = np.add(min_Uit, lambda_U*(1-gamma_i)*(self.U_it(user_id, time+1)-self.Uit_hat(user, time+1, gamma_i)))
-				min_Uit = np.add(min_Uit, lambda_U*sum_userh)
+				target_min_Uit = np.add(Y_ijt * (np.dot(uid_time, v_j_item) - R_ijt) *v_j_item, lambda_U*(uid_time-self.Uit_hat(user, time, gamma_i)))
+				target_min_Uit = np.add(target_min_Uit, lambda_U*(1-gamma_i)*(self.U_it(user_id, time+1)-self.Uit_hat(user, time+1, gamma_i)))
+				target_min_Uit = np.add(target_min_Uit, lambda_U*sum_userh)
 
-			min_Uit = min_Uit - self.learning_rate * min_Uit  # )np.add
+			min_Uit = min_Uit - self.learning_rate * target_min_Uit  # )np.add
 			if np.isnan(np.sum(min_Uit)):
 				return self.user_interest[time][:, user_id]
 			self.update_U_it(min_Uit, user_id, time)
 			print min_Uit
 		return min_Uit
 
-	def minimum_gamma(self, user, lambda_U, time_sequence):
+	def PGD_gamma_eta(self):
+		for user_id in range(self.user_num):  # i in (N)
+			user = selected_user[user_id]  # get the user
+			print("Processing user " + str(user) + " with id number " + str(user_id) + "......")
+			gamma_i = self.minimum_gamma(user)
+		pass
+
+	def minimum_gamma(self, user, lambda_U):
 		# user i
 		user_id = selected_user.index(user)
 		sum_t = 0.0
-		for t in time_sequence:
-			neighbors_i = self.neighbors(user, t - 1, 0)
-			sum_h = 0.0
-			for h in neighbors_i:
-				uid_h = selected_user.index(h)
-				eta_h = eta[uid_h]
-				sum_h += self.L_hit(h, user, t - 1, eta_h) * self.user_interest[t-1][:, uid_h]  # self.U_it(h, t - 1)
-			# sum_t += (self.Uit_hat(user, t, gamma_i) - self.U_it(user, t)) * (sum_h-self.U_it(user, t - 1))
-			sum_t += (
-				self.user_interest_Uit_hat[t][:, user_id] - self.user_interest[t][:, user_id] * (sum_h - self.user_interest[t-1][:, user_id]))
-		min_target = lambda_U * sum_t
+		gamma_i = 1.0
+		for iter in range(self.max_iter):
+			print("Iteration: " + str(iter))
+			for t in range(1, self.time_num+1):
+				neighbors_i = self.neighbors(user, t - 1, 0)
+				sum_h = 0.0
+				for h in neighbors_i:
+					uid_h = selected_user.index(h)
+					eta_h = eta[uid_h]
+					sum_h += self.L_hit(h, user, t - 1, eta_h) * self.user_interest[t-1][:, uid_h]  # self.U_it(h, t - 1)
+				# sum_t += (self.Uit_hat(user, t, gamma_i) - self.U_it(user, t)) * (sum_h-self.U_it(user, t - 1))
+				sum_t += (
+					self.user_interest_Uit_hat[t][:, user_id] - self.user_interest[t][:, user_id] * (sum_h - self.user_interest[t-1][:, user_id]))
+			min_target = lambda_U * sum_t
+			# gamma_i -= self.learning_rate*min_target
+			gamma_i = self.pi_x(gamma_i-self.learning_rate*min_target)
+			print gamma_i
 
-	def minimum_eta(self, user_i, lambda_U, time_sequence, gamma):
+	def pi_x(self, x):
+		res = []
+		for c in range(0, 1.1, 0.1):
+			y = np.array([0.5 for c in range(self.user_num)])
+			res.append(np.linalg.norm(y-x, ord=2))
+		return np.argmin(np.array(res))
+
+	def minimum_eta(self, user_i, lambda_U, gamma):
 		sum_t = 0.0
 		gamma_i = gamma[user_i]
 		uid_i = selected_user.index(user_i)
-		for t in time_sequence:
+		for t in range(1, self.time_num+1):
 			neighbors_i = self.neighbors(user_i, t - 1, 0)
 			sum_h = 0.0
 			for user_h in neighbors_i:
