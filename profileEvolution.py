@@ -240,9 +240,12 @@ class ProfileEvolution:
 		is_friend = self.get_friend_type(user_h, user_i, time)  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
 
 		friends_i = self.neighbors(user_i, time, 1)
-		friends_h = self.neighbors(user_h, time, 1)
-		intersec = list(set(friends_i).intersection(set(friends_h)))
-		L_hit = eta * is_friend + (1-eta) * float(len(intersec)/len(friends_i))
+		if len(friends_i) != 0:
+			friends_h = self.neighbors(user_h, time, 1)
+			intersec = list(set(friends_i).intersection(set(friends_h)))
+			L_hit = eta * is_friend + (1-eta) * float(len(intersec)/len(friends_i))
+		else:
+			L_hit = 0
 		return L_hit
 
 	def get_friend_type(self, user1, user2, time):
