@@ -65,7 +65,7 @@ class ProfileEvolution:
 		min_Uit = np.zeros(self.D)
 		item_set = []
 		for minb in range(self.minibatch):
-			item_set.append(random.randint(0, self.doc_num))  # choose mini_batch number of documents' ids
+			item_set.append(random.randint(0, self.doc_num-1))  # choose mini_batch number of documents' ids
 		for iter in range(self.max_iter):
 			print("Iteration: " + str(iter))
 			for item in item_set:
@@ -295,7 +295,7 @@ if __name__ == '__main__':
 	# gamma = np.array([0.5 for i in range(user_num)])
 	# eta = np.array([0.5 for i in range(user_num)])
 	lambda_U = 0.3
-	for i in range(5):
+	for i in range(2):
 		print(str(i) + "-th round......")
 		Profile.SGD_Uit(lambda_U, i)
 		Profile.PGD_gamma_eta(lambda_U, i)
