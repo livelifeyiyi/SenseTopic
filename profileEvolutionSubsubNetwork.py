@@ -46,7 +46,7 @@ class ProfileEvolution:
 				user = selected_user[user_id]		# get the user id
 				print("Processing user " + str(user) + " with id number " + str(user_id) + " at time " + str(time) + "......")
 				Uit = self.minimum_Uit(user, time, self.gamma, self.eta, lambda_U)
-				self.update_U_it(Uit, user, time)
+				self.update_U_it(Uit, user_id, time)
 		print("Saving user interest U into file......")
 		np.save('../output/100_U_user_interest_' + str(round_num) + '.npy', self.user_interest)
 		np.save('../output/100_U_user_interest_hat_' + str(round_num) + '.npy', self.user_interest_Uit_hat)
