@@ -10,7 +10,7 @@ max_uid = selected_user[-1]
 
 class ProfileEvolution:
 	def __init__(self, dbip, dbname, pwd, topic_file, mid_dir, learning_rate, minibatch, max_iter, feature_dimension, user_num, time_num):
-		self.D = feature_dimension
+		self.D = int(feature_dimension)
 		conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
 		self.cursor, self.db = conDB.connect_db()
 		self.topic_file = topic_file  # M*1
