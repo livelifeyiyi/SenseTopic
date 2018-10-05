@@ -9,6 +9,7 @@ import pylab as Plot
 import argparse
 import tsne
 import sys
+import codecs
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -26,7 +27,7 @@ if __name__ == "__main__":
 
     X = Math.loadtxt(r.vectorFile, dtype='float', delimiter= ' ', usecols=range(200))
 
-    with open(r.labelfile, 'r') as f:
+    with codecs.open(r.labelfile, mode='r', encoding='utf-8') as f:
         labels = f.read().upper().splitlines()
         Y = tsne.tsne(X, 2, r.demension, r.perplexity)
         fig, ax = Plot.subplots()
