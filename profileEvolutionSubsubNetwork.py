@@ -41,7 +41,7 @@ class ProfileEvolution:
 		self.eta = np.ones(self.user_num)
 
 	def SGD_Uit(self, lambda_U, round_num):
-		for time in range(1, self.time_num):  # t in time_sequence; count from 1
+		for time in range(1, self.time_num-1):  # t in time_sequence; count from 1
 			for user_id in range(10):  # self.user_num):  # i in (N)
 				user = selected_user[user_id]		# get the user id
 				print("Processing user " + str(user) + " with id number " + str(user_id) + " at time " + str(time) + "......")
