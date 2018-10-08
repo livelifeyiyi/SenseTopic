@@ -135,10 +135,10 @@ class ProfileEvolution:
 	def pi_x(self, x):
 		res = []
 		for c in range(0, 11):
-			c = c * 0.1
+			c_1 = c * 0.1
 			# y = np.array([0.5 for i in range(self.user_num)])
-			res.append(np.linalg.norm(c-x, ord=2))
-			print res
+			res.append(np.linalg.norm(c_1-x, ord=2))
+		print res
 		return np.argmin(np.array(res))
 
 	def minimum_eta(self, user_i, lambda_U, gamma):
