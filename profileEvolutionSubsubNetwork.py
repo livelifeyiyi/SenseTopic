@@ -128,15 +128,16 @@ class ProfileEvolution:
 					self.user_interest_Uit_hat[t][:, user_id] - self.user_interest[t][:, user_id] * (sum_h - self.user_interest[t-1][:, user_id]))
 			min_target = lambda_U * sum_t
 			# gamma_i -= self.learning_rate*min_target
-			gamma_i = self.pi_x(gamma_i-self.learning_rate*min_target)
+			gamma_i -= self.learning_rate * self.pi_x(gamma_i-min_target)
 			print "gamma: " + str(gamma_i)
 		return gamma_i
 
 	def pi_x(self, x):
 		res = []
-		for c in range(0, 1.1, 0.1):
-			y = np.array([0.5 for c in range(self.user_num)])
-			res.append(np.linalg.norm(y-x, ord=2))
+		for c in range(0, 11):
+			c = c * 0.1
+			# y = np.array([0.5 for i in range(self.user_num)])
+			res.append(np.linalg.norm(c-x, ord=2))
 		return np.argmin(np.array(res))
 
 	def minimum_eta(self, user_i, lambda_U, gamma):
@@ -162,7 +163,7 @@ class ProfileEvolution:
 						  self.user_interest[t][:, uid_i] * (gamma_i * sum_h + (1 - gamma_i) * self.user_interest[t-1][:, uid_i]))
 
 			min_target = lambda_U * sum_t
-			eta_i = self.pi_x(eta_i - self.learning_rate * min_target)
+			eta_i -= self.learning_rate * self.pi_x(eta_i - min_target)
 			print "eta: " + str(eta_i)
 		return eta_i
 
