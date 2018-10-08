@@ -138,12 +138,14 @@ class ProfileEvolution:
 			c = c * 0.1
 			# y = np.array([0.5 for i in range(self.user_num)])
 			res.append(np.linalg.norm(c-x, ord=2))
+			print res
 		return np.argmin(np.array(res))
 
 	def minimum_eta(self, user_i, lambda_U, gamma):
 		sum_t = 0.0
-		gamma_i = gamma[user_i]
+
 		uid_i = selected_user.index(user_i)
+		gamma_i = gamma[uid_i]
 		eta_i = 1.0
 		for iter in range(self.max_iter):
 			print("Iteration: " + str(iter))
