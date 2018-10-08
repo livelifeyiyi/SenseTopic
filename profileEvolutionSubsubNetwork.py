@@ -35,12 +35,21 @@ class ProfileEvolution:
 		# topic_assign.shape = (self.doc_num, self.D)  # M*D
 		self.topic_assign_np = np.array(topic_assign).T  # D*M
 		# initialize user interest score: U
-		self.user_interest = np.ones((self.time_num, self.D, self.user_num))
-		self.user_interest_Uit_hat = np.ones((self.time_num, self.D, self.user_num))
+		try:
+			self.user_interest = np.ones((self.time_num, self.D, self.user_num))
+		except Exception as e:
+			print e
+			self.user_interest = np.load('../output/100_U_user_interest_0.npy')
+		try:
+			self.user_interest_Uit_hat = np.ones((self.time_num, self.D, self.user_num))
+		except Exception as e:
+			print e
+			self.user_interest_Uit_hat = np.load('../output/100_U_user_interest_hat_0.npy')
 		self.gamma = np.ones(self.user_num)
 		self.eta = np.ones(self.user_num)
 
 	def SGD_Uit(self, lambda_U, round_num):
+		print("Processing Uit......")
 		for time in range(1, self.time_num-1):  # t in time_sequence; count from 1
 			for user_id in range(10):  # self.user_num):  # i in (N)
 				user = selected_user[user_id]		# get the user id
@@ -87,7 +96,8 @@ class ProfileEvolution:
 		return min_Uit
 
 	def PGD_gamma_eta(self, lambda_U, round_num):
-		for user_id in range(self.user_num):  # i in (N)
+		print("Processing gamma and eta......")
+		for user_id in range(10):  # self.user_num):  # i in (N)
 			user = selected_user[user_id]  # get the user
 			print("Processing user " + str(user) + " with id number " + str(user_id) + "......")
 			gamma_i = self.minimum_gamma(user, lambda_U, self.eta)
@@ -106,7 +116,7 @@ class ProfileEvolution:
 		gamma_i = 1.0
 		for iter in range(self.max_iter):
 			print("Iteration: " + str(iter))
-			for t in range(1, self.time_num+1):
+			for t in range(1, self.time_num-1):
 				neighbors_i = self.neighbors(user, t - 1, 0)
 				sum_h = 0.0
 				for h in neighbors_i:
@@ -136,7 +146,7 @@ class ProfileEvolution:
 		eta_i = 1.0
 		for iter in range(self.max_iter):
 			print("Iteration: " + str(iter))
-			for t in range(1, self.time_num+1):
+			for t in range(1, self.time_num-1):
 				neighbors_i = self.neighbors(user_i, t - 1, 0)
 				sum_h = 0.0
 				for user_h in neighbors_i:
@@ -300,6 +310,7 @@ if __name__ == '__main__':
 	lambda_U = 0.3
 	for i in range(2):
 		print(str(i) + "-th round......")
-		Profile.SGD_Uit(lambda_U, i)
+		if i > 0:
+			Profile.SGD_Uit(lambda_U, i)
 		Profile.PGD_gamma_eta(lambda_U, i)
 	# Profile.Y_R_ijt(1227898, 3361644068075147, '2011-11-02-11:18:14')
