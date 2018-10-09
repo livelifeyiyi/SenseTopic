@@ -53,8 +53,8 @@ class ProfileEvolution:
 				Uit = self.minimum_Uit(user, time, self.gamma, self.eta, lambda_U)
 				self.update_U_it(Uit, user_id, time)
 		print("Saving user interest U into file......")
-		np.save('../output/100_U_user_interest_' + str(round_num) + '.npy', self.user_interest)
-		np.save('../output/100_U_user_interest_hat_' + str(round_num) + '.npy', self.user_interest_Uit_hat)
+		np.save('../output/lda_100_U_user_interest_' + str(round_num) + '.npy', self.user_interest)
+		np.save('../output/lda_100_U_user_interest_hat_' + str(round_num) + '.npy', self.user_interest_Uit_hat)
 		# for j in self.doc_num(M)
 
 	def minimum_Uit(self, user, time, gamma, eta, lambda_U):  # , item_set
@@ -101,8 +101,8 @@ class ProfileEvolution:
 			self.eta[user_id] = eta_i
 
 		print("Saving parameter gamma, eta into file......")
-		np.save('../output/100_gamma_' + str(round_num) + '.npy', self.gamma)
-		np.save('../output/100_eta_' + str(round_num) + '.npy', self.eta)
+		np.save('../output/lda_100_gamma_' + str(round_num) + '.npy', self.gamma)
+		np.save('../output/lda_100_eta_' + str(round_num) + '.npy', self.eta)
 
 	def minimum_gamma(self, user, lambda_U, eta):
 		# user i
