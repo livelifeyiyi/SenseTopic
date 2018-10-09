@@ -51,7 +51,7 @@ class ProfileEvolution:
 	def SGD_Uit(self, lambda_U, round_num):
 		print("Processing Uit......")
 		for time in range(1, self.time_num-1):  # t in time_sequence; count from 1
-			for user_id in range(10):  # self.user_num):  # i in (N)
+			for user_id in range(self.user_num):  # i in (N)
 				user = selected_user[user_id]		# get the user id
 				print("Processing user " + str(user) + " with id number " + str(user_id) + " at time " + str(time) + "......")
 				Uit = self.minimum_Uit(user, time, self.gamma, self.eta, lambda_U)
@@ -97,7 +97,7 @@ class ProfileEvolution:
 
 	def PGD_gamma_eta(self, lambda_U, round_num):
 		print("Processing gamma and eta......")
-		for user_id in range(10):  # self.user_num):  # i in (N)
+		for user_id in range(self.user_num):  # i in (N)
 			user = selected_user[user_id]  # get the user
 			print("Processing user " + str(user) + " with id number " + str(user_id) + "......")
 			gamma_i = self.minimum_gamma(user, lambda_U, self.eta)
