@@ -5,7 +5,7 @@ import random
 import argparse
 import ConnectDB
 import time
-
+import numpy as np
 
 class SelectUser:
 	def __init__(self, select_user_num, all_user_num):
@@ -111,6 +111,10 @@ class BuildSubNetwork:
 		print("Table replacement finished!")
 
 	def mid_selected_user_100(self):
+		"""
+		selected the user concerned mid
+		:return: save to file "mid_id_user100"
+		"""
 		sql = """ select distinct(`:END_ID`) from tb_miduserrelation_selected_time where `:START_ID` <= 18360 """
 		self.cursor.execute(sql)
 		ress = self.cursor.fetchall()
@@ -118,6 +122,46 @@ class BuildSubNetwork:
 			mid = res[0]
 			with codecs.open('../data/mid_id_user100', mode='a+', encoding='utf-8') as mid_file:
 				mid_file.write(str(mid) + '\n')
+
+	def topic_assign_user100(self):
+		"""
+		Choose the topic assignments for selected users's mid
+		:return: save to file "topic_assign_user100"
+		"""
+		topic_assign_file = "E:/code/SN2/pDMM-master/output/model.filterAllstop.sense.100.topicAssignments"
+		mid_id_all_file = "../data/root_content_id.txt"
+		mid_id_user100 = "../data/mid_id_user1w"  # mid_id_user100
+		target_file = "../data/topic_assign_user1w"  # topic_assign_user100
+		item_mid_map = list(np.loadtxt(mid_id_all_file))
+		mid_id_user100_np = np.loadtxt(mid_id_user100)
+		topic_assign_np = np.loadtxt(topic_assign_file)
+		for mid_user100 in mid_id_user100_np:
+			mid_id = item_mid_map.index(mid_user100)
+			selected_topic_assign = int(topic_assign_np[mid_id])
+			with codecs.open(target_file, mode='a+', encoding='utf-8') as outfile:
+				outfile.write(str(selected_topic_assign) + '\n')
+
+	def process_topoc100_assign(self):
+		from topicDistribution import topic
+		from midIndex import mid
+
+		mid_id_user100 = "../data/mid_id_user100"  # mid_id_user100
+		target_file = "../data/topic_assign_user100_lda"  # topic_assign_user100
+		# with codecs.open(topic_assign_file, mode='r', encoding='utf-8') as topic_file:
+		# 	topic_assign_np = np.array(list(topic_file.readlines()))
+		topic_assign_np = np.array(topic)
+		# with codecs.open(mid_id_all_file, mode='r', encoding='utf-8') as mid_file:
+		# 	item_mid_map = list(mid_file.readlines())
+		mid_id_user100_np = np.loadtxt(mid_id_user100)
+		for mid_user100 in mid_id_user100_np:
+			try:
+				mid_id = mid.index(str(int(mid_user100)))
+				selected_topic_assign = topic_assign_np[mid_id]
+			except Exception as e:
+				print e
+				selected_topic_assign = [0.0 for i in range(100)]
+			with codecs.open(target_file, mode='a+', encoding='utf-8') as outfile:
+				outfile.write(str(selected_topic_assign) + '\n')
 
 	def mid_selected_user_1w(self):
 		sql = """ select distinct(`:END_ID`) from tb_miduserrelation_selected_time"""
@@ -157,4 +201,6 @@ if __name__ == '__main__':
 	# BuildSubNetwork.user_mid_select()
 	# BuildSubNetwork.convert_time_format(dbip, pwd, dbname)
 	# BuildSubNetwork.mid_selected_user_100()
-	BuildSubNetwork.mid_selected_user_1w()
+	# BuildSubNetwork.mid_selected_user_1w()
+	# BuildSubNetwork.topic_assign_user100()
+	BuildSubNetwork.process_topoc100_assign()
