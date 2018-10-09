@@ -61,15 +61,15 @@ class itemPrediction:
 		for time in range(20, self.time_num-1):  # t in time_sequence; count from 1
 			for user_id in range(self.user_num):  # i in (N)
 				for item_id in range(self.doc_num):
-					print("Processing user " + str(user_id) + " item " + str(item_id) + " at time " + str(time_num) +"......")
+					print("Processing user " + str(user_id) + " item " + str(item_id) + " at time " + str(time) + "......")
 					gamma_i = self.gamma[user_id]
 					user = selected_user[user_id]
 					Uit_t1 = self.Uit_hat(user, time+1, gamma_i)
 					Rij_t1 = np.dot(Uit_t1, self.topic_assign_np[:, item_id])
 					Rij_t_dict[time][user_id].append(Rij_t1)
-		print("Writing json file......")
-		with codecs.open('Predict_Rij_t.json', mode='w') as fo:
-			json.dump(Rij_t_dict, fo)
+			print("Writing json file......")
+			with codecs.open('Predict_Rij_t' + str(time) +'.json', mode='w') as fo:
+				json.dump(Rij_t_dict, fo)
 
 	def Uit_hat(self, user, time, gamma_i):  # user i
 		neighbors_i = self.neighbors(user, time-1, 0)
