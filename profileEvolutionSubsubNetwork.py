@@ -35,16 +35,8 @@ class ProfileEvolution:
 		# topic_assign.shape = (self.doc_num, self.D)  # M*D
 		self.topic_assign_np = np.array(topic_assign).T  # D*M
 		# initialize user interest score: U
-		try:
-			self.user_interest = np.ones((self.time_num, self.D, self.user_num))
-		except Exception as e:
-			print e
-			self.user_interest = np.load('../output/100_U_user_interest_0.npy')
-		try:
-			self.user_interest_Uit_hat = np.ones((self.time_num, self.D, self.user_num))
-		except Exception as e:
-			print e
-			self.user_interest_Uit_hat = np.load('../output/100_U_user_interest_hat_0.npy')
+		self.user_interest = np.ones((self.time_num, self.D, self.user_num))
+		self.user_interest_Uit_hat = np.ones((self.time_num, self.D, self.user_num))
 		self.gamma = np.ones(self.user_num)
 		self.eta = np.ones(self.user_num)
 
