@@ -157,10 +157,12 @@ class ProfileEvolution:
 					uid_h = selected_user.index(user_h)
 					is_friend = 0  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
 					friends_i = self.neighbors(user_i, t, 1)
-					friends_h = self.neighbors(user_h, t, 1)
-					intersec = list(set(friends_i).intersection(set(friends_h)))
-					sum_h += (is_friend - float(len(intersec) / len(friends_i))) * self.user_interest[t-1][:, uid_h]  # self.U_it(user_h, t-1)
-
+					if len(friends_i) != 0:
+						friends_h = self.neighbors(user_h, t, 1)
+						intersec = list(set(friends_i).intersection(set(friends_h)))
+						sum_h += (is_friend - float(len(intersec) / len(friends_i))) * self.user_interest[t-1][:, uid_h]  # self.U_it(user_h, t-1)
+					else:
+						sum_h += 0
 				# sum_t += (self.Uit_hat(user_i, t, gamma_i) - self.U_it(user_i, t)) * (gamma_i * sum_h + (1-gamma_i) * self.U_it(user_, t-1))
 				sum_t += (self.user_interest_Uit_hat[t][:, uid_i] -
 						  self.user_interest[t][:, uid_i] * (gamma_i * sum_h + (1 - gamma_i) * self.user_interest[t-1][:, uid_i]))
