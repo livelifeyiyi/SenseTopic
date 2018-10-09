@@ -9,7 +9,7 @@ max_uid = selected_user[-1]
 
 
 class ProfileEvolution:
-	def __init__(self, dbip, dbname, pwd, topic_file, mid_dir, learning_rate, max_iter, feature_dimension, user_num, time_num):
+	def __init__(self, dbip, dbname, pwd, topic_file, mid_dir, learning_rate, max_iter, feature_dimension, user_num, time_num, topic_type):
 		self.D = int(feature_dimension)
 		conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
 		self.cursor, self.db = conDB.connect_db()
@@ -17,23 +17,27 @@ class ProfileEvolution:
 		self.user_num = int(user_num)
 		self.time_num = int(time_num)
 		self.max_iter = int(max_iter)
-
+		self.topic_type = topic_type
 		self.learning_rate = float(learning_rate)
 		self.mid_dir = mid_dir
 		self.item_mid_map = np.loadtxt(self.mid_dir)
 		print("Reading the topic assignment file......")
-		topic_assign = []
-		for doc_id, topic_num in enumerate(codecs.open(self.topic_file, mode='r', encoding='utf-8')):
-			if topic_num:
-				topic = [0 for i in range(self.D)]
-				topic[int(topic_num)] = 1
-				topic_assign.append(topic)
+		if self.topic_type == 'DMM':
+			topic_assign = []
+			for doc_id, topic_num in enumerate(codecs.open(self.topic_file, mode='r', encoding='utf-8')):
+				if topic_num:
+					topic = [0 for i in range(self.D)]
+					topic[int(topic_num)] = 1
+					topic_assign.append(topic)
+			self.topic_assign_np = np.array(topic_assign).T  # D*M
+		else:
+			self.topic_assign_np = np.loadtxt(self.topic_file)
 		self.doc_num = len(topic_assign)   # M
 		print("The number of documents is: " + str(self.doc_num))
 		print("The number of topics is: " + str(self.D))
 		print("The number of users is: " + str(self.user_num))
 		# topic_assign.shape = (self.doc_num, self.D)  # M*D
-		self.topic_assign_np = np.array(topic_assign).T  # D*M
+
 		# initialize user interest score: U
 		self.user_interest = np.ones((self.time_num, self.D, self.user_num))
 		self.user_interest_Uit_hat = np.ones((self.time_num, self.D, self.user_num))
@@ -284,6 +288,7 @@ if __name__ == '__main__':
 	parser.add_argument("-f", "--feature_dimension", default=50, help="Dimension of features (topic number)")
 	parser.add_argument("-u", "--user_num", default=10000, help="Number of users to build subnetwork")
 	parser.add_argument("-t", "--time_num", default=30, help="Number of time sequence")
+	parser.add_argument("-tt", "--topic_type", default='DMM', help="Topic model type, LDA or DMM")
 
 	args = parser.parse_args()
 	pwd = args.dbpwd
@@ -296,12 +301,13 @@ if __name__ == '__main__':
 	feature_dimension = args.feature_dimension
 	user_num = args.user_num
 	time_num = args.time_num
+	topic_type = args.topic_type
 
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
 	Profile = ProfileEvolution(dbip=dbip, dbname='db_weibodata', pwd=pwd, topic_file=topic_file, mid_dir=mid_dir,
 							   learning_rate=learning_rate, max_iter=max_iteration,
-							   feature_dimension=feature_dimension, user_num=user_num, time_num=time_num)
+							   feature_dimension=feature_dimension, user_num=user_num, time_num=time_num, topic_type=topic_type)
 	# gamma = np.array([0.5 for i in range(user_num)])
 	# eta = np.array([0.5 for i in range(user_num)])
 	lambda_U = 0.3
