@@ -13,6 +13,14 @@ import codecs
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+
+def plot_vectors():
+    from PIL import Image
+    image = Image.open('../tsne/figure_1000_zoom.png')
+    image.show()
+    image.format
+# plot_vectors()
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', action='store', dest='labelfile', required=True,
