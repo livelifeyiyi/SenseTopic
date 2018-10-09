@@ -110,6 +110,24 @@ class BuildSubNetwork:
 
 		print("Table replacement finished!")
 
+	def mid_selected_user_100(self):
+		sql = """ select distinct(`:END_ID`) from tb_miduserrelation_selected_time where `:START_ID` <= 18360 """
+		self.cursor.execute(sql)
+		ress = self.cursor.fetchall()
+		for res in ress:
+			mid = res[0]
+			with codecs.open('../data/mid_id_user100', mode='a+', encoding='utf-8') as mid_file:
+				mid_file.write(str(mid) + '\n')
+
+	def mid_selected_user_1w(self):
+		sql = """ select distinct(`:END_ID`) from tb_miduserrelation_selected_time"""
+		self.cursor.execute(sql)
+		ress = self.cursor.fetchall()
+		for res in ress:
+			mid = res[0]
+			with codecs.open('../data/mid_id_user1w', mode='a+', encoding='utf-8') as mid_file:
+				mid_file.write(str(mid) + '\n')
+
 
 if __name__ == '__main__':
 
@@ -132,10 +150,11 @@ if __name__ == '__main__':
 	# include selected user from file
 	else:
 		from selected_user import selected_user
-	
-	BuildSubNetwork = BuildSubNetwork(selected_user, dbip=dbip, dbname=dbname, pwd=pwd)
-	BuildSubNetwork.graph_1month_select()
-	BuildSubNetwork.user_relation_select()
-	BuildSubNetwork.user_mid_select()
 
-	BuildSubNetwork.convert_time_format(dbip, pwd, dbname)
+	BuildSubNetwork = BuildSubNetwork(selected_user, dbip=dbip, dbname=dbname, pwd=pwd)
+	# BuildSubNetwork.graph_1month_select()
+	# BuildSubNetwork.user_relation_select()
+	# BuildSubNetwork.user_mid_select()
+	# BuildSubNetwork.convert_time_format(dbip, pwd, dbname)
+	# BuildSubNetwork.mid_selected_user_100()
+	BuildSubNetwork.mid_selected_user_1w()
