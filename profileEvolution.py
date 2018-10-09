@@ -39,8 +39,9 @@ class ProfileEvolution:
 		self.eta = np.ones(self.user_num)
 
 	def SGD_Uit(self, lambda_U, round_num):
+		print("Processing Uit......")
 		for time in range(1, self.time_num-1):  # t in time_sequence; count from 1
-			for user_id in range(10):  # self.user_num):  # i in (N)
+			for user_id in range(self.user_num):  # i in (N)
 				user = selected_user[user_id]		# get the user id
 				print("Processing user " + str(user) + " with id number " + str(user_id) + " at time " + str(time) + "......")
 				Uit = self.minimum_Uit(user, time, self.gamma, self.eta, lambda_U)
@@ -85,6 +86,7 @@ class ProfileEvolution:
 		return min_Uit
 
 	def PGD_gamma_eta(self, lambda_U, round_num):
+		print("Processing gamma and eta......")
 		for user_id in range(self.user_num):  # i in (N)
 			user = selected_user[user_id]  # get the user
 			print("Processing user " + str(user) + " with id number " + str(user_id) + "......")
@@ -104,7 +106,7 @@ class ProfileEvolution:
 		gamma_i = 1.0
 		for iter in range(self.max_iter):
 			print("Iteration: " + str(iter))
-			for t in range(1, self.time_num+1):
+			for t in range(1, self.time_num-1):
 				neighbors_i = self.neighbors(user, t - 1, 0)
 				sum_h = 0.0
 				for h in neighbors_i:
@@ -116,41 +118,49 @@ class ProfileEvolution:
 					self.user_interest_Uit_hat[t][:, user_id] - self.user_interest[t][:, user_id] * (sum_h - self.user_interest[t-1][:, user_id]))
 			min_target = lambda_U * sum_t
 			# gamma_i -= self.learning_rate*min_target
-			gamma_i = self.pi_x(gamma_i-self.learning_rate*min_target)
+			#gamma_i = self.pi_x(gamma_i-self.learning_rate*min_target)
+			gamma_i -= self.learning_rate * self.pi_x(gamma_i - min_target)
 			print "gamma: " + str(gamma_i)
 		return gamma_i
 
 	def pi_x(self, x):
 		res = []
-		for c in range(0, 1.1, 0.1):
-			y = np.array([0.5 for c in range(self.user_num)])
-			res.append(np.linalg.norm(y-x, ord=2))
-		return np.argmin(np.array(res))
+		for c in range(0, 11):
+			c_1 = c * 0.1
+			# y = np.array([0.5 for i in range(self.user_num)])
+			y = np.array([c_1 - x])
+			res.append(np.linalg.norm(y, ord=2))
+		# print res
+		return min(res)
 
 	def minimum_eta(self, user_i, lambda_U, gamma):
 		sum_t = 0.0
-		gamma_i = gamma[user_i]
+		uid_i = selected_user.index(user_i)
+		gamma_i = gamma[uid_i]
 		uid_i = selected_user.index(user_i)
 		eta_i = 1.0
 		for iter in range(self.max_iter):
 			print("Iteration: " + str(iter))
-			for t in range(1, self.time_num+1):
+			for t in range(1, self.time_num-1):
 				neighbors_i = self.neighbors(user_i, t - 1, 0)
 				sum_h = 0.0
 				for user_h in neighbors_i:
 					uid_h = selected_user.index(user_h)
 					is_friend = 0  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
 					friends_i = self.neighbors(user_i, t, 1)
-					friends_h = self.neighbors(user_h, t, 1)
-					intersec = list(set(friends_i).intersection(set(friends_h)))
-					sum_h += (is_friend - float(len(intersec) / len(friends_i))) * self.user_interest[t-1][:, uid_h]  # self.U_it(user_h, t-1)
-
+					if len(friends_i) != 0:
+						friends_h = self.neighbors(user_h, t, 1)
+						intersec = list(set(friends_i).intersection(set(friends_h)))
+						sum_h += (is_friend - float(len(intersec) / len(friends_i))) * self.user_interest[t-1][:, uid_h]  # self.U_it(user_h, t-1)
+					else:
+						sum_h += 0
 				# sum_t += (self.Uit_hat(user_i, t, gamma_i) - self.U_it(user_i, t)) * (gamma_i * sum_h + (1-gamma_i) * self.U_it(user_, t-1))
 				sum_t += (self.user_interest_Uit_hat[t][:, uid_i] -
 						  self.user_interest[t][:, uid_i] * (gamma_i * sum_h + (1 - gamma_i) * self.user_interest[t-1][:, uid_i]))
 
 			min_target = lambda_U * sum_t
-			eta_i = self.pi_x(eta_i - self.learning_rate * min_target)
+			eta_i -= self.learning_rate * self.pi_x(eta_i - min_target)
+			# eta_i = self.pi_x(eta_i - self.learning_rate * min_target)
 			print "eta: " + str(eta_i)
 		return eta_i
 
@@ -295,7 +305,7 @@ if __name__ == '__main__':
 	# gamma = np.array([0.5 for i in range(user_num)])
 	# eta = np.array([0.5 for i in range(user_num)])
 	lambda_U = 0.3
-	for i in range(2):
+	for i in range(10):
 		print(str(i) + "-th round......")
 		Profile.SGD_Uit(lambda_U, i)
 		Profile.PGD_gamma_eta(lambda_U, i)
