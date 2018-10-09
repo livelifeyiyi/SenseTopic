@@ -312,9 +312,9 @@ if __name__ == '__main__':
 	# gamma = np.array([0.5 for i in range(user_num)])
 	# eta = np.array([0.5 for i in range(user_num)])
 	lambda_U = 0.3
-	for i in range(2):
+	for i in range(10):
 		print(str(i) + "-th round......")
-		if i > 0:
-			Profile.SGD_Uit(lambda_U, i)
+		# if i > 0:
+		Profile.SGD_Uit(lambda_U, i)
 		Profile.PGD_gamma_eta(lambda_U, i)
 	# Profile.Y_R_ijt(1227898, 3361644068075147, '2011-11-02-11:18:14')
