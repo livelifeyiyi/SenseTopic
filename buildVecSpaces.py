@@ -105,7 +105,7 @@ class VecSpaces:
 			print("Time: " + str(time))
 			for user_id in range(user_num):
 				print("User: " + str(user_id))
-				user = selected_user(user_id)
+				user = selected_user[user_id]
 				sql = """SELECT `:START_ID`, `:END_ID`  FROM graph_1month_selected WHERE 
 					(`:START_ID`<=%s and  `:END_ID` <= %s) and (`:START_ID`=%s or `:END_ID`=%s)  and `build_time` = '%s'""" % (max_uid, max_uid, user, user, time)
 				self.cursor.execute(sql)
@@ -132,9 +132,9 @@ class VecSpaces:
 				friends = list(set(follows).intersection(set(followed)))
 				friend_dict_flag1[time][user_id] = friends
 				# neighbors = friends
-		with codecs.open('neighbors_flag_0.json', mode='w') as fo:
+		with codecs.open('../data/neighbors_flag_0.json', mode='w') as fo:
 			json.dump(follow_dict_flag0, fo)
-		with codecs.open('neighbors_flag_1.json', mode='w') as fo:
+		with codecs.open('../data/neighbors_flag_1.json', mode='w') as fo:
 			json.dump(friend_dict_flag1, fo)
 
 
@@ -144,18 +144,16 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-p", "--DB_password",  help="Password of database")
 	parser.add_argument("-i", "--DB_IP_address", help="IP address of database")
-	parser.add_argument("-u", "--users_generate", default='f', help="Choose how to generate selected users, r: randomly generate; f: from file")
 	parser.add_argument("-mid_dir", default="../data/mid_id_user100", help="The dictionary of mid-id map file")
 
 	args = parser.parse_args()
 	pwd = args.DB_password
 	dbip = args.DB_IP_address
-	users_flag = args.users_generate
 	mid_dir = args.mid_dir
 	dbname = 'db_weibodata'
 
 	VS = VecSpaces(dbip, dbname, pwd, mid_dir)
-	VS.get_friend_type()
+	# VS.get_friend_type()
 	VS.get_neighbors()
 	VS.calculate_act_Rijt()
 
