@@ -140,19 +140,22 @@ class VecSpaces:
 
 if __name__ == '__main__':
 	# print np.ones((2,5,10), dtype='int')
-	VS = VecSpaces()
-	VS.get_friend_type()
-	VS.get_neighbors()
-	VS.calculate_act_Rijt()
 
-	'''
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-p", "--DB_password",  help="Password of database")
 	parser.add_argument("-i", "--DB_IP_address", help="IP address of database")
 	parser.add_argument("-u", "--users_generate", default='f', help="Choose how to generate selected users, r: randomly generate; f: from file")
+	parser.add_argument("-mid_dir", default="../data/mid_id_user100", help="The dictionary of mid-id map file")
+
 	args = parser.parse_args()
 	pwd = args.DB_password
 	dbip = args.DB_IP_address
 	users_flag = args.users_generate
+	mid_dir = args.mid_dir
 	dbname = 'db_weibodata'
-	'''
+
+	VS = VecSpaces(dbip, dbname, pwd, mid_dir)
+	VS.get_friend_type()
+	VS.get_neighbors()
+	VS.calculate_act_Rijt()
+

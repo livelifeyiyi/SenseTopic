@@ -6,6 +6,8 @@ import argparse
 import ConnectDB
 import time
 import numpy as np
+import json
+
 
 class SelectUser:
 	def __init__(self, select_user_num, all_user_num):
@@ -30,10 +32,11 @@ class SelectUser:
 
 
 class BuildSubNetwork:
-	def __init__(self, selected_user, dbip, dbname, pwd):
+	def __init__(self, selected_user, dbip, dbname, pwd, mid_dir):
 		self.selected_user = selected_user
 		conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
 		self.cursor, self.db = conDB.connect_db()
+		self.item_mid_map = np.loadtxt(self.mid_dir)
 
 	def graph_1month_select(self):
 		print("Choosing the randomly selected users and time from 170w users......")
@@ -195,7 +198,7 @@ if __name__ == '__main__':
 	else:
 		from selected_user import selected_user
 
-	BuildSubNetwork = BuildSubNetwork(selected_user, dbip=dbip, dbname=dbname, pwd=pwd)
+	BuildSubNetwork = BuildSubNetwork(selected_user, dbip=dbip, dbname=dbname, pwd=pwd, mid_dir='../data/mid_id_user100')
 	# BuildSubNetwork.graph_1month_select()
 	# BuildSubNetwork.user_relation_select()
 	# BuildSubNetwork.user_mid_select()
