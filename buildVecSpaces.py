@@ -1,12 +1,12 @@
 import argparse
 import numpy as np
-import pandas as pd
+# import pandas as pd
 import codecs
 import json
 import ConnectDB
 from selected_user import selected_user
-selected_user = selected_user[0:100]
-max_uid = selected_user[-1]
+# selected_user = selected_user[0:100]
+# max_uid = selected_user[-1]
 
 
 class VecSpaces:
@@ -35,8 +35,9 @@ class VecSpaces:
 					act_rij = self.R_ijt(user_i, item_id, time)
 					Rijt[time][user_id][item_id] = act_rij
 		print("Saving to dictionary '../data/Actual_Rij_t.npy'......")
+		# print Rijt
 		np.save('../data/Actual_Rij_t.npy', Rijt)
-
+		np.savetxt('../data/Actual_Rij_t.txt', Rijt)
 		# save as dictionary/ json format
 		'''rij_dict = dict.fromkeys([i for i in range(user_num)], [0.0 for i in range(item_num)])
 		Rij_t_dict = dict.fromkeys([i for i in range(0, time_num + 1)], rij_dict)
@@ -85,17 +86,19 @@ class VecSpaces:
 					self.cursor.execute(sql)
 					ress = self.cursor.fetchall()
 					if len(ress) == 0:
-						friend_type[time][user1][user2] = 0.0
-						friend_type[time][user2][user1] = 0.0
+						friend_type[time][user1_id][user2_id] = 0.0
+						friend_type[time][user2_id][user1_id] = 0.0
 						# return 0
 					elif len(ress) == 1:
-						friend_type[time][user1][user2] = 0.5
-						friend_type[time][user2][user1] = 0.5
+						friend_type[time][user1_id][user2_id] = 0.5
+						friend_type[time][user2_id][user1_id] = 0.5
 					elif len(ress) == 2:
-						friend_type[time][user1][user2] = 1.0
-						friend_type[time][user2][user1] = 1.0
+						friend_type[time][user1_id][user2_id] = 1.0
+						friend_type[time][user2_id][user1_id] = 1.0
 		print("Saving to dictionary '../data/friend_type_uijt.npy'......")
+		# print friend_type
 		np.save('../data/friend_type_uijt.npy', friend_type)
+		np.savetxt('../data/friend_type_uijt.txt', friend_type)
 
 	def get_neighbors(self, user_num, time_num):
 		print("Getting neighbors of each user at different time......")
@@ -110,19 +113,20 @@ class VecSpaces:
 				# print("User: " + str(user_id))
 				user = selected_user[user_id]
 				sql = """SELECT `:START_ID`, `:END_ID`  FROM graph_1month_selected WHERE 
-					(`:START_ID`<=%s and  `:END_ID` <= %s) and (`:START_ID`=%s or `:END_ID`=%s)  and `build_time` = '%s'""" % (max_uid, max_uid, user, user, time)
+					(`:START_ID`=%s or `:END_ID`=%s)  and `build_time` = '%s'""" % (user, user, time)
 				self.cursor.execute(sql)
 				results = self.cursor.fetchall()
 
-				follow_dict_flag0[time][user_id] = []
+				follow = []
 				for res in results:
 					user1, user2 = res[0], res[1]
-					if user1 == user and user2 not in follow_dict_flag0[time][user_id]:
-						follow_dict_flag0[str(time)][str(user_id)].append(user2)
-						# follow.append(user2)
-					if user2 == user and user1 not in follow_dict_flag0[time][user_id]:
-						follow_dict_flag0[str(time)][str(user_id)].append(user1)
-						# follow.append(user1)
+					if user1 == user and user2 not in follow:
+						# follow_dict_flag0[time][user_id].append(user2)
+						follow.append(user2)
+					if user2 == user and user1 not in follow:
+						# follow_dict_flag0[time][user_id].append(user1)
+						follow.append(user1)
+				follow_dict_flag0[time][user_id] = follow
 
 				follows = []
 				followed = []
@@ -134,6 +138,7 @@ class VecSpaces:
 						followed.append(user1)
 				friends = list(set(follows).intersection(set(followed)))
 				friend_dict_flag1[time][user_id] = friends
+				print friends, follow
 				# neighbors = friends
 		print("Writing files......")
 		with codecs.open('../data/neighbors_flag_0.json', mode='w') as fo:
@@ -152,18 +157,18 @@ if __name__ == '__main__':
 	parser.add_argument("-p", "--DB_password",  help="Password of database")
 	parser.add_argument("-i", "--DB_IP_address", help="IP address of database")
 	parser.add_argument("-mid_dir", default="../data/mid_id_user100", help="The dictionary of mid-id map file")
-	parser.add_argument("-u", "--user_num", default=100, help="Number of users to build subnetwork")
+	parser.add_argument("-u", "--user_num", default=10000, help="Number of users to build subnetwork")
 	parser.add_argument("-t", "--time_num", default=31, help="Number of time sequence")
-	parser.add_argument("-it", "--item_num", default=2080, help="Number of time documents")
+	parser.add_argument("-it", "--item_num", default=64337, help="Number of time documents")
 
 	args = parser.parse_args()
 	pwd = args.DB_password
 	dbip = args.DB_IP_address
 	mid_dir = args.mid_dir
 	dbname = 'db_weibodata'
-	user_num = args.user_num
-	time_num = args.time_num
-	item_num = args.item_num
+	user_num = int(args.user_num)
+	time_num = int(args.time_num)
+	item_num = int(args.item_num)
 
 	VS = VecSpaces(dbip, dbname, pwd, mid_dir)
 	VS.get_friend_type(user_num=user_num, time_num=time_num)
