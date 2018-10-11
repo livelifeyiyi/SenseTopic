@@ -5,11 +5,12 @@ import ConnectDB
 import codecs
 import json
 from selected_user import selected_user
-selected_user = selected_user[0:100]
-max_uid = selected_user[-1]
+# selected_user = selected_user[0:100]
+# max_uid = selected_user[-1]
+
 
 class itemPrediction:
-	def __init__(self, dbip, dbname, pwd, topic_file, mid_dir, feature_dimension, user_num, time_num, iteround, rootDir):
+	def __init__(self, dbip, dbname, pwd, topic_file, mid_dir, feature_dimension, user_num, time_num, iteround, rootDir, topic_type):
 		self.D = int(feature_dimension)
 		conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
 		self.cursor, self.db = conDB.connect_db()
@@ -20,45 +21,50 @@ class itemPrediction:
 		self.mid_dir = mid_dir
 		self.rootDir = rootDir
 		self.item_mid_map = np.loadtxt(self.mid_dir)
+		self.topic_type = topic_type
 		print("Reading the topic assignment file......")
-		topic_assign = []
-		for doc_id, topic_num in enumerate(codecs.open(self.topic_file, mode='r', encoding='utf-8')):
-			if topic_num:
-				topic = [0 for i in range(self.D)]
-				topic[int(topic_num)] = 1
-				topic_assign.append(topic)
+		if self.topic_type == 'dmm':
+			topic_assign = []
+			for doc_id, topic_num in enumerate(codecs.open(self.topic_file, mode='r', encoding='utf-8')):
+				if topic_num:
+					topic = [0 for i in range(self.D)]
+					topic[int(topic_num)] = 1
+					topic_assign.append(topic)
+			self.topic_assign_np = np.array(topic_assign).T  # D*M
+		else:
+			self.topic_assign_np = np.loadtxt(self.topic_file).T
 		self.doc_num = len(topic_assign)   # M
 		print("The number of documents is: " + str(self.doc_num))
 		print("The number of topics is: " + str(self.D))
 		print("The number of users is: " + str(self.user_num))
 		# topic_assign.shape = (self.doc_num, self.D)  # M*D
-		self.topic_assign_np = np.array(topic_assign).T  # D*M
 		# initialize user interest score: U
 		try:
-			self.user_interest = np.load(self.rootDir + '100_U_user_interest_' + self.iteround + '.npy')
+			self.user_interest = np.load(self.rootDir + self.topic_type + '_100_U_user_interest_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
 			self.user_interest = np.ones((self.time_num, self.D, self.user_num))
 		try:
-			self.user_interest_Uit_hat = np.load(self.rootDir + '100_U_user_interest_hat_' + self.iteround + '.npy')
+			self.user_interest_Uit_hat = np.load(self.rootDir + self.topic_type + '_100_U_user_interest_hat_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
 			self.user_interest_Uit_hat = np.ones((self.time_num, self.D, self.user_num))
 		try:
-			self.gamma = np.load(self.rootDir + '100_gamma_' + self.iteround + '.npy')
+			self.gamma = np.load(self.rootDir + self.topic_type + '_100_gamma_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
 			self.gamma = np.ones(self.user_num)
 		try:
-			self.eta = np.load(self.rootDir + '100_eta_' + self.iteround + '.npy')
+			self.eta = np.load(self.rootDir + self.topic_type + '_100_eta_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
 			self.eta = np.ones(self.user_num)
 
 	def Rij_t1(self):
 		# Rij_t_dict = dict.fromkeys([i for i in range(20, self.time_num-1)], rij_dict)
+		Rijt = np.ones((self.time_num, self.user_num, self.doc_num), dtype='int')
 		for time in range(20, self.time_num-1):  # t in time_sequence; count from 1
-			rij_dict = dict.fromkeys([i for i in range(self.user_num)], [])
+			# rij_dict = dict.fromkeys([i for i in range(self.user_num)], [])
 			for user_id in range(self.user_num):  # i in (N)
 				for item_id in range(self.doc_num):
 					print("Processing user " + str(user_id) + " item " + str(item_id) + " at time " + str(time) + "......")
@@ -66,10 +72,12 @@ class itemPrediction:
 					user = selected_user[user_id]
 					Uit_t1 = self.Uit_hat(user, time+1, gamma_i)
 					Rij_t1 = np.dot(Uit_t1, self.topic_assign_np[:, item_id])
-					rij_dict[user_id].append(Rij_t1)
-			print("Writing json file......")
-			with codecs.open('Predict_Rij_t' + str(time) + '.json', mode='w') as fo:
-				json.dump(rij_dict, fo)
+					Rijt[time][user_id][item_id] = Rij_t1
+					# rij_dict[user_id].append(Rij_t1)
+			print("Writing np file......")
+			np.save('Predict_Rij_t' + str(time) + '.npy', Rijt[time])
+			# with codecs.open('Predict_Rij_t' + str(time) + '.json', mode='w') as fo:
+			# 	json.dump(rij_dict, fo)
 
 	def Uit_hat(self, user, time, gamma_i):  # user i
 		neighbors_i = self.neighbors(user, time-1, 0)
@@ -84,31 +92,16 @@ class itemPrediction:
 
 	def neighbors(self, user, time, flag):
 		# flag = 0 return all neighbors, =1 return only friends.
-		neighbors = []  # list of the users who have a link with user_i
-
-		sql = """SELECT `:START_ID`, `:END_ID`  FROM graph_1month_selected WHERE 
-			(`:START_ID`<=%s and  `:END_ID` <= %s) and (`:START_ID`=%s or `:END_ID`=%s)  and `build_time` = '%s'""" % (max_uid, max_uid, user, user, time)
-		self.cursor.execute(sql)
-		results = self.cursor.fetchall()
+		# neighbors = []  # list of the users who have a link with user_i
 		if flag == 0:
-			for res in results:
-				user1, user2 = res[0], res[1]
-				if user1 == user and user2 not in neighbors:
-					neighbors.append(user2)
-				if user2 == user and user1 not in neighbors:
-					neighbors.append(user1)
+			with codecs.open(self.rootDir + 'neighbors_flag_0.json', mode='r') as infile:
+				neighbors_0 = json.load(infile)
+				neighbors = neighbors_0[time][user]
 		else:
-			follows = []
-			followed = []
-			for res in results:
-				user1, user2 = res[0], res[1]
-				if user1 == user:
-					follows.append(user2)
-				if user2 == user:
-					followed.append(user1)
-			friends = list(set(follows).intersection(set(followed)))
-			neighbors = friends
-		return neighbors  # save into a global parameter?
+			with codecs.open(self.rootDir + 'neighbors_flag_1.json', mode='r') as infile:
+				neighbors_1 = json.load(infile)
+				neighbors = neighbors_1[time][user]
+		return neighbors
 
 	def L_hit(self, user_h, user_i, time, eta):
 		is_friend = self.get_friend_type(user_h, user_i, time)  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
@@ -123,18 +116,8 @@ class itemPrediction:
 		return L_hit
 
 	def get_friend_type(self, user1, user2, time):
-		sql = """SELECT * FROM graph_1month_selected 
-			WHERE((`:START_ID`=%s AND `:END_ID`=%s ) or (`:START_ID`=%s AND `:END_ID`=%s)) and `build_time` = '%s'""" % (user1, user2, user2, user1, time)
-		self.cursor.execute(sql)
-		ress = self.cursor.fetchall()
-		if len(ress) == 0:
-			return 0
-		elif len(ress) == 1:
-			return 0.5
-		elif len(ress) == 2:
-			return 1
-		else:
-			return 0
+		friend_type = np.load(self.rootDir + 'friend_type_uijt.npy')
+		return friend_type[time][selected_user.index(user1)][selected_user.index(user2)]
 
 	def U_it(self, user_id, time):
 		# user_id = selected_user.index(user)

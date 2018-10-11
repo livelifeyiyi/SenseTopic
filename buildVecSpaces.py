@@ -76,7 +76,7 @@ class VecSpaces:
 		for time in range(0, time_num):
 			print("Time: " + str(time))
 			for user1_id in range(user_num):
-				# print("User: " + str(user1_id))
+				print("User: " + str(user1_id))
 				user1 = selected_user[user1_id]
 				for user2_id in range(user1_id+1, user_num):
 					user2 = selected_user[user2_id]
@@ -110,7 +110,7 @@ class VecSpaces:
 		for time in range(0, time_num):
 			print("Time: " + str(time))
 			for user_id in range(user_num):
-				# print("User: " + str(user_id))
+				print("User: " + str(user_id))
 				user = selected_user[user_id]
 				sql = """SELECT `:START_ID`, `:END_ID`  FROM graph_1month_selected WHERE 
 					(`:START_ID`=%s or `:END_ID`=%s)  and `build_time` = '%s'""" % (user, user, time)

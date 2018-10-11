@@ -31,8 +31,8 @@ class ProfileEvolution:
 					topic_assign.append(topic)
 			self.topic_assign_np = np.array(topic_assign).T  # D*M
 		else:
-			self.topic_assign_np = np.loadtxt(self.topic_file)
-		self.doc_num = len(topic_assign)   # M
+			self.topic_assign_np = np.loadtxt(self.topic_file).T
+		self.doc_num = len(self.topic_assign_np)   # M
 		print("The number of documents is: " + str(self.doc_num))
 		print("The number of topics is: " + str(self.D))
 		print("The number of users is: " + str(self.user_num))

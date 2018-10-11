@@ -1,16 +1,17 @@
 import argparse
 import codecs
+import json
 import numpy as np
-import ConnectDB
+# import ConnectDB
 import random
 from selected_user import selected_user
 
 
 class ProfileEvolution:
-	def __init__(self, dbip, dbname, pwd, topic_file, mid_dir, learning_rate, max_iter, feature_dimension, user_num, time_num, topic_type):
+	def __init__(self, dbip, dbname, pwd, topic_file, mid_dir, learning_rate, max_iter, feature_dimension, user_num, time_num, topic_type, rootDir):
 		self.D = int(feature_dimension)
-		conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
-		self.cursor, self.db = conDB.connect_db()
+		# conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
+		# self.cursor, self.db = conDB.connect_db()
 		self.topic_file = topic_file  # M*1
 		self.user_num = int(user_num)
 		self.time_num = int(time_num)
@@ -20,6 +21,7 @@ class ProfileEvolution:
 		self.mid_dir = mid_dir
 		self.item_mid_map = np.loadtxt(self.mid_dir)
 		self.topic_type = topic_type
+		self.rootDir = rootDir
 		print("Reading the topic assignment file......")
 		if self.topic_type == 'DMM':
 			topic_assign = []
@@ -170,27 +172,13 @@ class ProfileEvolution:
 	def Y_R_ijt(self, user_i, item_j, time):
 		# Y_ijt = 1 if user_i has a link with item_j at time t, else=0
 		# R_ijt = rating preference score of user_i to item_j at time t
-		# `type` tb_miduserrelation_selected  # SELECT * FROM tb_miduserrelation
-		mid = self.item_mid_map[item_j]
-		sql = """SELECT `type` FROM tb_miduserrelation_selected_time
-				WHERE `:START_ID`=%s AND `:END_ID`=%s AND `time_index`="%s" """ % (user_i, mid, time)
-		self.cursor.execute(sql)
-		ress = self.cursor.fetchall()
-		# print res
-		Y_ijt = 0
-		R_ijt = 0
-		if len(ress) == 0:
+		R_ij = np.load('Actual_Rij_t.npy')
+		usr_id = selected_user.index(user_i)
+		R_ijt = R_ij[time][usr_id][item_j]
+		if R_ijt == 0:
 			Y_ijt = 0
-			R_ijt = 0
 		else:
-			for res in ress:
-				Y_ijt = 1
-				relation_type = res[0]
-				if relation_type == 0:
-					R_ijt = 1
-				elif relation_type == 1:
-					R_ijt = 2
-				break
+			Y_ijt = 1
 		return Y_ijt, R_ijt
 
 	def V_j(self, item):
@@ -223,31 +211,15 @@ class ProfileEvolution:
 
 	def neighbors(self, user, time, flag):
 		# flag = 0 return all neighbors, =1 return only friends.
-		neighbors = []  # list of the users who have a link with user_i
-
-		sql = """SELECT `:START_ID`, `:END_ID`  FROM graph_1month_selected WHERE 
-			(`:START_ID`=%s or `:END_ID`=%s) and `build_time` = '%s'""" % (user, user, time)
-		self.cursor.execute(sql)
-		results = self.cursor.fetchall()
 		if flag == 0:
-			for res in results:
-				user1, user2 = res[0], res[1]
-				if user1 == user and user2 not in neighbors:
-					neighbors.append(user2)
-				if user2 == user and user1 not in neighbors:
-					neighbors.append(user1)
+			with codecs.open(self.rootDir + 'neighbors_flag_0.json', mode='r') as infile:
+				neighbors_0 = json.load(infile)
+				neighbors = neighbors_0[time][user]
 		else:
-			follows = []
-			followed = []
-			for res in results:
-				user1, user2 = res[0], res[1]
-				if user1 == user:
-					follows.append(user2)
-				if user2 == user:
-					followed.append(user1)
-			friends = list(set(follows).intersection(set(followed)))
-			neighbors = friends
-		return neighbors  # save into a global parameter?
+			with codecs.open(self.rootDir + 'neighbors_flag_1.json', mode='r') as infile:
+				neighbors_1 = json.load(infile)
+				neighbors = neighbors_1[time][user]
+		return neighbors
 
 	def L_hit(self, user_h, user_i, time, eta):
 		is_friend = self.get_friend_type(user_h, user_i, time)  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
@@ -262,18 +234,8 @@ class ProfileEvolution:
 		return L_hit
 
 	def get_friend_type(self, user1, user2, time):
-		sql = """SELECT * FROM graph_1month_selected 
-			WHERE((`:START_ID`=%s AND `:END_ID`=%s ) or (`:START_ID`=%s AND `:END_ID`=%s)) and `build_time` = '%s'""" % (user1, user2, user2, user1, time)
-		self.cursor.execute(sql)
-		ress = self.cursor.fetchall()
-		if len(ress) == 0:
-			return 0
-		elif len(ress) == 1:
-			return 0.5
-		elif len(ress) == 2:
-			return 1
-		else:
-			return 0
+		friend_type = np.load(self.rootDir + 'friend_type_uijt.npy')
+		return friend_type[time][selected_user.index(user1)][selected_user.index(user2)]
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
@@ -288,6 +250,7 @@ if __name__ == '__main__':
 	parser.add_argument("-u", "--user_num", default=10000, help="Number of users to build subnetwork")
 	parser.add_argument("-t", "--time_num", default=30, help="Number of time sequence")
 	parser.add_argument("-tt", "--topic_type", default='DMM', help="Topic model type, LDA or DMM")
+	parser.add_argument("-r", "--rootDir", default='../data/', help="Root dictionary")
 
 	args = parser.parse_args()
 	pwd = args.dbpwd
@@ -295,19 +258,19 @@ if __name__ == '__main__':
 	topic_file = args.topicFile
 	mid_dir = args.mid_dir
 	learning_rate = args.learning_rate
-	#  minibatch = args.minibatch
 	max_iteration = args.max_iteration
 	feature_dimension = args.feature_dimension
 	user_num = args.user_num
 	time_num = args.time_num
 	topic_type = args.topic_type
+	rootDir = args.rootDir
 
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
 	Profile = ProfileEvolution(dbip=dbip, dbname='db_weibodata', pwd=pwd, topic_file=topic_file, mid_dir=mid_dir,
 							   learning_rate=learning_rate, max_iter=max_iteration,
 							   feature_dimension=feature_dimension, user_num=user_num, time_num=time_num,
-							   topic_type=topic_type)
+							   topic_type=topic_type, rootDir=rootDir)
 	# gamma = np.array([0.5 for i in range(user_num)])
 	# eta = np.array([0.5 for i in range(user_num)])
 	lambda_U = 0.3
