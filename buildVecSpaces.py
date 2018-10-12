@@ -98,14 +98,14 @@ class VecSpaces:
 		print("Saving to dictionary '../data/friend_type_uijt.npy'......")
 		# print friend_type
 		np.save('../data/friend_type_uijt.npy', friend_type)
-		np.savetxt('../data/friend_type_uijt.txt', friend_type)
+		# np.savetxt('../data/friend_type_uijt.txt', friend_type) cannot save 3d
 
 	def get_neighbors(self, user_num, time_num):
 		print("Getting neighbors of each user at different time......")
 		# flag = 0 return all neighbors, =1 return only friends.
-		ni_follow = dict.fromkeys([i for i in range(user_num)], list)
+		ni_follow = dict.fromkeys([i for i in range(user_num)], '')
 		follow_dict_flag0 = dict.fromkeys([i for i in range(0, time_num)], ni_follow)
-		ni_friend = dict.fromkeys([i for i in range(user_num)], list)
+		ni_friend = dict.fromkeys([i for i in range(user_num)], '')
 		friend_dict_flag1 = dict.fromkeys([i for i in range(0, time_num)], ni_friend)
 		for time in range(0, time_num):
 			print("Time: " + str(time))
@@ -126,7 +126,7 @@ class VecSpaces:
 					if user2 == user and user1 not in follow:
 						# follow_dict_flag0[time][user_id].append(user1)
 						follow.append(user1)
-				follow_dict_flag0[time][user_id] = follow
+				follow_dict_flag0[time][user_id] = str(follow)
 
 				follows = []
 				followed = []
@@ -137,14 +137,14 @@ class VecSpaces:
 					if user2 == user:
 						followed.append(user1)
 				friends = list(set(follows).intersection(set(followed)))
-				friend_dict_flag1[time][user_id] = friends
+				friend_dict_flag1[time][user_id] = str(friends)
 				print friends, follow
 				# neighbors = friends
 		print("Writing files......")
 		with codecs.open('../data/neighbors_flag_0.json', mode='w') as fo:
-			json.dump(follow_dict_flag0, fo)
+			json.dump(str(follow_dict_flag0), fo)
 		with codecs.open('../data/neighbors_flag_1.json', mode='w') as fo:
-			json.dump(friend_dict_flag1, fo)
+			json.dump(str(friend_dict_flag1), fo)
 
 
 if __name__ == '__main__':
@@ -156,10 +156,10 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-p", "--DB_password",  help="Password of database")
 	parser.add_argument("-i", "--DB_IP_address", help="IP address of database")
-	parser.add_argument("-mid_dir", default="../data/mid_id_user100", help="The dictionary of mid-id map file")
-	parser.add_argument("-u", "--user_num", default=10000, help="Number of users to build subnetwork")
+	parser.add_argument("-mid_dir", default="../data/mid_id_user2000", help="The dictionary of mid-id map file")
+	parser.add_argument("-u", "--user_num", default=2000, help="Number of users to build subnetwork")
 	parser.add_argument("-t", "--time_num", default=31, help="Number of time sequence")
-	parser.add_argument("-it", "--item_num", default=64337, help="Number of time documents")
+	parser.add_argument("-it", "--item_num", default=24446, help="Number of time documents")
 
 	args = parser.parse_args()
 	pwd = args.DB_password
