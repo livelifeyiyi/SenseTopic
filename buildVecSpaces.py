@@ -142,9 +142,9 @@ class VecSpaces:
 				# neighbors = friends
 		print("Writing files......")
 		with codecs.open('../data/neighbors_flag_0.json', mode='w') as fo:
-			json.dump(str(follow_dict_flag0), fo)
+			json.dump(follow_dict_flag0, fo)
 		with codecs.open('../data/neighbors_flag_1.json', mode='w') as fo:
-			json.dump(str(friend_dict_flag1), fo)
+			json.dump(friend_dict_flag1, fo)
 
 
 if __name__ == '__main__':
