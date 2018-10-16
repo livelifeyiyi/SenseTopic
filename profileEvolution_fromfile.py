@@ -231,7 +231,7 @@ class ProfileEvolution:
 				try:
 					neighbors = [int(i) for i in neighbors_0[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
 				except Exception as e:
-					print e
+					# print e
 					neighbors = []
 		else:
 			with codecs.open(self.rootDir + 'neighbors_flag_1.json', mode='r') as infile:
@@ -239,7 +239,7 @@ class ProfileEvolution:
 				try:
 					neighbors = [int(i) for i in neighbors_1[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
 				except Exception as e:
-					print e
+					# print e
 					neighbors = []
 		return neighbors
 
