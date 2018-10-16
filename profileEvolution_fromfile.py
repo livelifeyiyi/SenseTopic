@@ -6,7 +6,7 @@ from selected_user import selected_user
 
 
 class ProfileEvolution:
-	def __init__(self, topic_file, mid_dir, learning_rate, max_iter, feature_dimension, user_num, time_num, topic_type, rootDir):
+	def __init__(self, topic_file, learning_rate, max_iter, feature_dimension, user_num, time_num, topic_type, dataDir, outDir):
 		self.D = int(feature_dimension)
 		# conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
 		# self.cursor, self.db = conDB.connect_db()
@@ -16,10 +16,11 @@ class ProfileEvolution:
 		self.max_iter = int(max_iter)
 		# self.minibatch = int(minibatch)
 		self.learning_rate = float(learning_rate)
-		self.mid_dir = mid_dir
-		self.item_mid_map = np.loadtxt(self.mid_dir)
+		# self.mid_dir = mid_dir
+		# self.item_mid_map = np.loadtxt(self.mid_dir)
 		self.topic_type = topic_type
-		self.rootDir = rootDir
+		self.rootDir = dataDir
+		self.outDir = outDir
 		print("Reading the topic assignment file......")
 		if self.topic_type == 'DMM':
 			topic_assign = []
@@ -55,8 +56,8 @@ class ProfileEvolution:
 				Uit = self.minimum_Uit(user, time, self.gamma, self.eta, lambda_U)
 				self.update_U_it(Uit, user_id, time)
 		print("Saving user interest U into file......")
-		np.save('../output/' + self.topic_type + '_U_user_interest_' + str(round_num) + '.npy', self.user_interest)
-		np.save('../output/' + self.topic_type + '_U_user_interest_hat_' + str(round_num) + '.npy', self.user_interest_Uit_hat)
+		np.save(self.outDir + self.topic_type + '_U_user_interest_' + str(round_num) + '.npy', self.user_interest)
+		np.save(self.outDir + self.topic_type + '_U_user_interest_hat_' + str(round_num) + '.npy', self.user_interest_Uit_hat)
 		# for j in self.doc_num(M)
 
 	def minimum_Uit(self, user, time, gamma, eta, lambda_U):  # , item_set
@@ -106,8 +107,8 @@ class ProfileEvolution:
 			self.eta[user_id] = eta_i
 
 		print("Saving parameter gamma, eta into file......")
-		np.save('../output/' + self.topic_type + '_gamma_' + str(round_num) + '.npy', self.gamma)
-		np.save('../output/' + self.topic_type + '_eta_' + str(round_num) + '.npy', self.eta)
+		np.save(self.outDir + self.topic_type + '_gamma_' + str(round_num) + '.npy', self.gamma)
+		np.save(self.outDir + self.topic_type + '_eta_' + str(round_num) + '.npy', self.eta)
 
 	def minimum_gamma(self, user, lambda_U, eta):
 		# user i
@@ -268,7 +269,7 @@ class ProfileEvolution:
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-topicFile", default="../data/topic_assign_user2000", help="Topic assignment file")
-	parser.add_argument("-mid_dir", default="../data/mid_id_user2000", help="The dictionary of mid-id map file")
+	# parser.add_argument("-mid_dir", default="../data/mid_id_user2000", help="The dictionary of mid-id map file")
 	parser.add_argument("-l", "--learning_rate", default=0.001, help="The learning rate of SGD for Uit")
 	# parser.add_argument("-b", "--minibatch", default=1000, help="Number of minibatch of SGD (subset of documents)")
 	parser.add_argument("-i", "--max_iteration", default=1000, help="The max iteration of SGD")
@@ -276,11 +277,12 @@ if __name__ == '__main__':
 	parser.add_argument("-u", "--user_num", default=2000, help="Number of users to build subnetwork")
 	parser.add_argument("-t", "--time_num", default=31, help="Number of time sequence")
 	parser.add_argument("-tt", "--topic_type", default='DMM', help="Topic model type, LDA or DMM")
-	parser.add_argument("-r", "--rootDir", default='../data/', help="Root dictionary")
+	parser.add_argument("-r", "--rootDir", default='../data/', help="Root data dictionary")
+	parser.add_argument("-", "--outDir", default='../output/', help="Output dictionary")
 
 	args = parser.parse_args()
-	topic_file = args.topicFile
-	mid_dir = args.mid_dir
+	topic_file = args.topicFileo
+	# mid_dir = args.mid_dir
 	learning_rate = args.learning_rate
 	max_iteration = args.max_iteration
 	feature_dimension = args.feature_dimension
@@ -288,13 +290,14 @@ if __name__ == '__main__':
 	time_num = args.time_num
 	topic_type = args.topic_type
 	rootDir = args.rootDir
+	outDir = args.outDir
 
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
-	Profile = ProfileEvolution(topic_file=topic_file, mid_dir=mid_dir,
+	Profile = ProfileEvolution(topic_file=topic_file,
 							   learning_rate=learning_rate, max_iter=max_iteration,
 							   feature_dimension=feature_dimension, user_num=user_num, time_num=time_num,
-							   topic_type=topic_type, rootDir=rootDir)
+							   topic_type=topic_type, rootDir=rootDir, outDir=outDir)
 	# gamma = np.array([0.5 for i in range(user_num)])
 	# eta = np.array([0.5 for i in range(user_num)])
 	lambda_U = 0.3
