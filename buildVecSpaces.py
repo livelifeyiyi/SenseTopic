@@ -103,10 +103,11 @@ class VecSpaces:
 	def get_neighbors(self, user_num, time_num):
 		print("Getting neighbors of each user at different time......")
 		# flag = 0 return all neighbors, =1 return only friends.
-		ni_follow = dict.fromkeys([i for i in range(user_num)], '')
-		follow_dict_flag0 = dict.fromkeys([i for i in range(0, time_num)], ni_follow)
-		ni_friend = dict.fromkeys([i for i in range(user_num)], '')
-		friend_dict_flag1 = dict.fromkeys([i for i in range(0, time_num)], ni_friend)
+		ni_follow = {}  # dict.fromkeys([i for i in range(user_num)])
+		# follow_dict_flag0 = dict.fromkeys([i for i in range(0, time_num)], ni_follow)
+		follow_dict_flag0 = {}
+		ni_friend = {}  # dict.fromkeys([i for i in range(user_num)])
+		friend_dict_flag1 = {}  #dict.fromkeys([i for i in range(0, time_num)], ni_friend)
 		for time in range(1, time_num):
 			print("Time: " + str(time))
 			for user_id in range(user_num):
@@ -116,7 +117,6 @@ class VecSpaces:
 					(`:START_ID`=%s or `:END_ID`=%s)  and `build_time` = '%s'""" % (user, user, time)
 				self.cursor.execute(sql)
 				results = self.cursor.fetchall()
-
 				follow = []
 				for res in results:
 					user1, user2 = res[0], res[1]
@@ -126,7 +126,7 @@ class VecSpaces:
 					if user2 == user and user1 not in follow:
 						# follow_dict_flag0[time][user_id].append(user1)
 						follow.append(user1)
-				follow_dict_flag0[time][user_id] = str(follow)
+				ni_follow[user_id] = str(follow)
 
 				follows = []
 				followed = []
@@ -137,9 +137,11 @@ class VecSpaces:
 					if user2 == user:
 						followed.append(user1)
 				friends = list(set(follows).intersection(set(followed)))
-				friend_dict_flag1[time][user_id] = str(friends)
-				print friends, follow
+				ni_friend[user_id] = str(friends)
+				# print friends, follow
 				# neighbors = friends
+			follow_dict_flag0[time] = ni_follow
+			friend_dict_flag1[time] = ni_friend
 		print("Writing files......")
 		with codecs.open('../data/neighbors_flag_0.json', mode='w') as fo:
 			json.dump(follow_dict_flag0, fo)
@@ -152,6 +154,7 @@ if __name__ == '__main__':
 	print friend_type
 	friend_type[1][2][2] = 2
 	print friend_type[1][2][2]
+	'''
 	'''
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-p", "--DB_password",  help="Password of database")
@@ -169,7 +172,13 @@ if __name__ == '__main__':
 	user_num = int(args.user_num)
 	time_num = int(args.time_num)
 	item_num = int(args.item_num)
-
+	'''
+	pwd = 'zfeu23='
+	dbip = '192.168.2.134'
+	dbname = 'db_weibodata'
+	mid_dir = "../data/mid_id_user2000"
+	user_num = 2000
+	time_num = 31
 	VS = VecSpaces(dbip, dbname, pwd, mid_dir)
 	# VS.get_friend_type(user_num=user_num, time_num=time_num)
 	VS.get_neighbors(user_num=user_num, time_num=time_num)
