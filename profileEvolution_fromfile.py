@@ -2,13 +2,11 @@ import argparse
 import codecs
 import json
 import numpy as np
-# import ConnectDB
-import random
 from selected_user import selected_user
 
 
 class ProfileEvolution:
-	def __init__(self, dbip, dbname, pwd, topic_file, mid_dir, learning_rate, max_iter, feature_dimension, user_num, time_num, topic_type, rootDir):
+	def __init__(self, topic_file, mid_dir, learning_rate, max_iter, feature_dimension, user_num, time_num, topic_type, rootDir):
 		self.D = int(feature_dimension)
 		# conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
 		# self.cursor, self.db = conDB.connect_db()
@@ -214,11 +212,11 @@ class ProfileEvolution:
 		if flag == 0:
 			with codecs.open(self.rootDir + 'neighbors_flag_0.json', mode='r') as infile:
 				neighbors_0 = json.load(infile)
-				neighbors = neighbors_0[time][user]
+				neighbors = list(neighbors_0[time][user])
 		else:
 			with codecs.open(self.rootDir + 'neighbors_flag_1.json', mode='r') as infile:
 				neighbors_1 = json.load(infile)
-				neighbors = neighbors_1[time][user]
+				neighbors = list(neighbors_1[time][user])
 		return neighbors
 
 	def L_hit(self, user_h, user_i, time, eta):
@@ -239,22 +237,18 @@ class ProfileEvolution:
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-dbpwd", help="Password of database")
-	parser.add_argument("-dbIP", help="IP address of database")
 	parser.add_argument("-topicFile", default="../data/topic_assign_user100", help="Topic assignment file")
 	parser.add_argument("-mid_dir", default="../data/mid_id_user100", help="The dictionary of mid-id map file")
 	parser.add_argument("-l", "--learning_rate", default=0.001, help="The learning rate of SGD for Uit")
 	# parser.add_argument("-b", "--minibatch", default=1000, help="Number of minibatch of SGD (subset of documents)")
 	parser.add_argument("-i", "--max_iteration", default=1000, help="The max iteration of SGD")
 	parser.add_argument("-f", "--feature_dimension", default=50, help="Dimension of features (topic number)")
-	parser.add_argument("-u", "--user_num", default=10000, help="Number of users to build subnetwork")
-	parser.add_argument("-t", "--time_num", default=30, help="Number of time sequence")
+	parser.add_argument("-u", "--user_num", default=2000, help="Number of users to build subnetwork")
+	parser.add_argument("-t", "--time_num", default=31, help="Number of time sequence")
 	parser.add_argument("-tt", "--topic_type", default='DMM', help="Topic model type, LDA or DMM")
 	parser.add_argument("-r", "--rootDir", default='../data/', help="Root dictionary")
 
 	args = parser.parse_args()
-	pwd = args.dbpwd
-	dbip = args.dbIP
 	topic_file = args.topicFile
 	mid_dir = args.mid_dir
 	learning_rate = args.learning_rate
@@ -267,7 +261,7 @@ if __name__ == '__main__':
 
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
-	Profile = ProfileEvolution(dbip=dbip, dbname='db_weibodata', pwd=pwd, topic_file=topic_file, mid_dir=mid_dir,
+	Profile = ProfileEvolution(topic_file=topic_file, mid_dir=mid_dir,
 							   learning_rate=learning_rate, max_iter=max_iteration,
 							   feature_dimension=feature_dimension, user_num=user_num, time_num=time_num,
 							   topic_type=topic_type, rootDir=rootDir)
