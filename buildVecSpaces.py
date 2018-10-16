@@ -107,7 +107,7 @@ class VecSpaces:
 		follow_dict_flag0 = dict.fromkeys([i for i in range(0, time_num)], ni_follow)
 		ni_friend = dict.fromkeys([i for i in range(user_num)], '')
 		friend_dict_flag1 = dict.fromkeys([i for i in range(0, time_num)], ni_friend)
-		for time in range(0, time_num):
+		for time in range(1, time_num):
 			print("Time: " + str(time))
 			for user_id in range(user_num):
 				print("User: " + str(user_id))
@@ -171,7 +171,7 @@ if __name__ == '__main__':
 	item_num = int(args.item_num)
 
 	VS = VecSpaces(dbip, dbname, pwd, mid_dir)
-	VS.get_friend_type(user_num=user_num, time_num=time_num)
+	# VS.get_friend_type(user_num=user_num, time_num=time_num)
 	VS.get_neighbors(user_num=user_num, time_num=time_num)
-	VS.calculate_act_Rijt(user_num=user_num, time_num=time_num, item_num=item_num)
+	# VS.calculate_act_Rijt(user_num=user_num, time_num=time_num, item_num=item_num)
 
