@@ -32,6 +32,10 @@ class ProfileEvolution:
 		else:
 			self.topic_assign_np = np.loadtxt(self.topic_file).T
 		self.doc_num = len(self.topic_assign_np)   # M
+		print("Reading Actual_rij_t.npy file......")
+		self.R_ij = np.load(self.rootDir+'Actual_Rij_t.npy')
+		print("Reading friend_type_uijt.npy file......")
+		self.friend_type = np.load(self.rootDir + 'friend_type_uijt.npy')
 		print("The number of documents is: " + str(self.doc_num))
 		print("The number of topics is: " + str(self.D))
 		print("The number of users is: " + str(self.user_num))
@@ -64,6 +68,8 @@ class ProfileEvolution:
 		sum_userh = 0.0
 		for h in user_h:
 			uid_h = selected_user.index(h)
+			if selected_user.index(min(user_h)) >= self.user_num:
+				break
 			gamma_h = gamma[uid_h]
 			eta_h = eta[uid_h]
 			sum_userh += gamma_h * self.L_hit(h, user, time, eta_h) * (self.Uit_hat(h, time + 1, gamma_h) - self.U_it(uid_h, time + 1))
@@ -170,9 +176,9 @@ class ProfileEvolution:
 	def Y_R_ijt(self, user_i, item_j, time):
 		# Y_ijt = 1 if user_i has a link with item_j at time t, else=0
 		# R_ijt = rating preference score of user_i to item_j at time t
-		R_ij = np.load('Actual_Rij_t.npy')
+		# R_ij = np.load(self.rootDir+'Actual_Rij_t.npy')
 		usr_id = selected_user.index(user_i)
-		R_ijt = R_ij[time][usr_id][item_j]
+		R_ijt = self.R_ij[time][usr_id][item_j]
 		if R_ijt == 0:
 			Y_ijt = 0
 		else:
@@ -197,34 +203,39 @@ class ProfileEvolution:
 		self.user_interest[time][:, user_id] = U_it  # D*1
 
 	def Uit_hat(self, user, time, gamma_i):  # user i
-		neighbors_i = self.neighbors(user, time-1, 0)
+		user_id = selected_user.index(user)
+		neighbors_i = self.neighbors(user_id, time-1, 0)
 		sum_h = 0.0
 		for h in neighbors_i:
 			index_h = selected_user.index(h)
 			eta_h = self.eta[index_h]
 			sum_h += self.L_hit(h, user, time-1, eta_h) * self.U_it(index_h, time-1)
-		Uit_hat = (1-gamma_i) * self.U_it(selected_user.index(user), time-1) + gamma_i * sum_h
+		Uit_hat = (1-gamma_i) * self.U_it(user_id, time-1) + gamma_i * sum_h
 		self.user_interest_Uit_hat[time][:, selected_user.index(user)] = Uit_hat
 		return Uit_hat
 
 	def neighbors(self, user, time, flag):
+		# user id
 		# flag = 0 return all neighbors, =1 return only friends.
+		user_id = selected_user.index(user)
 		if flag == 0:
 			with codecs.open(self.rootDir + 'neighbors_flag_0.json', mode='r') as infile:
 				neighbors_0 = json.load(infile)
-				neighbors = list(neighbors_0[time][user])
+				neighbors = [int(i) for i in neighbors_0[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
 		else:
 			with codecs.open(self.rootDir + 'neighbors_flag_1.json', mode='r') as infile:
 				neighbors_1 = json.load(infile)
-				neighbors = list(neighbors_1[time][user])
+				neighbors = [int(i) for i in neighbors_1[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
 		return neighbors
 
 	def L_hit(self, user_h, user_i, time, eta):
-		is_friend = self.get_friend_type(user_h, user_i, time)  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
+		user_h_id = selected_user.index(user_h)
+		user_i_id = selected_user.index(user_i)
+		is_friend = self.get_friend_type(user_h_id, user_i_id, time)  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
 
-		friends_i = self.neighbors(user_i, time, 1)
+		friends_i = self.neighbors(user_i_id, time, 1)
 		if len(friends_i) != 0:
-			friends_h = self.neighbors(user_h, time, 1)
+			friends_h = self.neighbors(user_h_id, time, 1)
 			intersec = list(set(friends_i).intersection(set(friends_h)))
 			L_hit = eta * is_friend + (1-eta) * float(len(intersec)/len(friends_i))
 		else:
@@ -232,17 +243,18 @@ class ProfileEvolution:
 		return L_hit
 
 	def get_friend_type(self, user1, user2, time):
-		friend_type = np.load(self.rootDir + 'friend_type_uijt.npy')
-		return friend_type[time][selected_user.index(user1)][selected_user.index(user2)]
+		# input user id
+		# friend_type = np.load(self.rootDir + 'friend_type_uijt.npy')
+		return self.friend_type[time][selected_user.index(user1)][selected_user.index(user2)]
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-topicFile", default="../data/topic_assign_user100", help="Topic assignment file")
-	parser.add_argument("-mid_dir", default="../data/mid_id_user100", help="The dictionary of mid-id map file")
+	parser.add_argument("-topicFile", default="../data/topic_assign_user2000", help="Topic assignment file")
+	parser.add_argument("-mid_dir", default="../data/mid_id_user2000", help="The dictionary of mid-id map file")
 	parser.add_argument("-l", "--learning_rate", default=0.001, help="The learning rate of SGD for Uit")
 	# parser.add_argument("-b", "--minibatch", default=1000, help="Number of minibatch of SGD (subset of documents)")
 	parser.add_argument("-i", "--max_iteration", default=1000, help="The max iteration of SGD")
-	parser.add_argument("-f", "--feature_dimension", default=50, help="Dimension of features (topic number)")
+	parser.add_argument("-f", "--feature_dimension", default=100, help="Dimension of features (topic number)")
 	parser.add_argument("-u", "--user_num", default=2000, help="Number of users to build subnetwork")
 	parser.add_argument("-t", "--time_num", default=31, help="Number of time sequence")
 	parser.add_argument("-tt", "--topic_type", default='DMM', help="Topic model type, LDA or DMM")
