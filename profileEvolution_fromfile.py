@@ -281,7 +281,7 @@ if __name__ == '__main__':
 	parser.add_argument("-o", "--outDir", default='../output/', help="Output dictionary")
 
 	args = parser.parse_args()
-	topic_file = args.topicFileo
+	topic_file = args.topicFile
 	# mid_dir = args.mid_dir
 	learning_rate = args.learning_rate
 	max_iteration = args.max_iteration
@@ -297,7 +297,7 @@ if __name__ == '__main__':
 	Profile = ProfileEvolution(topic_file=topic_file,
 							   learning_rate=learning_rate, max_iter=max_iteration,
 							   feature_dimension=feature_dimension, user_num=user_num, time_num=time_num,
-							   topic_type=topic_type, rootDir=rootDir, outDir=outDir)
+							   topic_type=topic_type, dataDir=rootDir, outDir=outDir)
 	# gamma = np.array([0.5 for i in range(user_num)])
 	# eta = np.array([0.5 for i in range(user_num)])
 	lambda_U = 0.3
