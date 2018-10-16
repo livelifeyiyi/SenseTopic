@@ -204,7 +204,7 @@ class ProfileEvolution:
 
 	def Uit_hat(self, user, time, gamma_i):  # user i
 		user_id = selected_user.index(user)
-		neighbors_i = self.neighbors(user_id, time-1, 0)
+		neighbors_i = self.neighbors(user, time-1, 0)
 		sum_h = 0.0
 		for h in neighbors_i:
 			index_h = selected_user.index(h)
@@ -233,9 +233,9 @@ class ProfileEvolution:
 		user_i_id = selected_user.index(user_i)
 		is_friend = self.get_friend_type(user_h_id, user_i_id, time)  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
 
-		friends_i = self.neighbors(user_i_id, time, 1)
+		friends_i = self.neighbors(user_i, time, 1)
 		if len(friends_i) != 0:
-			friends_h = self.neighbors(user_h_id, time, 1)
+			friends_h = self.neighbors(user_h, time, 1)
 			intersec = list(set(friends_i).intersection(set(friends_h)))
 			L_hit = eta * is_friend + (1-eta) * float(len(intersec)/len(friends_i))
 		else:
