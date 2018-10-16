@@ -181,7 +181,7 @@ class BuildSubNetwork:
 
 if __name__ == '__main__':
 
-	'''parser = argparse.ArgumentParser()
+	parser = argparse.ArgumentParser()
 	parser.add_argument("-p", "--DB_password",  help="Password of database")
 	parser.add_argument("-i", "--DB_IP_address", help="IP address of database")
 	parser.add_argument("-u", "--users_generate", default='f', help="Choose how to generate selected users, r: randomly generate; f: from file")
@@ -198,11 +198,10 @@ if __name__ == '__main__':
 			outfile.write(str(selected_user))
 
 	# include selected user from file
-	else:'''
-	from SenseTopic.selected_user import selected_user
+	else:
+		from SenseTopic.selected_user import selected_user
 
-	BuildSubNetwork = BuildSubNetwork(selected_user, dbip='192.168.2.134', dbname='db_weibodata', pwd='zfeu23=', mid_dir='')
-	# BuildSubNetwork = BuildSubNetwork(selected_user, dbip=dbip, dbname=dbname, pwd=pwd, mid_dir='../data/mid_id_user100')
+	BuildSubNetwork = BuildSubNetwork(selected_user, dbip=dbip, dbname=dbname, pwd=pwd, mid_dir='../data/mid_id_user100')
 	# BuildSubNetwork.graph_1month_select()
 	# BuildSubNetwork.user_relation_select()
 	# BuildSubNetwork.user_mid_select()
