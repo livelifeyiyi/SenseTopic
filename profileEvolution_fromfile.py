@@ -278,7 +278,7 @@ if __name__ == '__main__':
 	parser.add_argument("-t", "--time_num", default=31, help="Number of time sequence")
 	parser.add_argument("-tt", "--topic_type", default='DMM', help="Topic model type, LDA or DMM")
 	parser.add_argument("-r", "--rootDir", default='../data/', help="Root data dictionary")
-	parser.add_argument("-", "--outDir", default='../output/', help="Output dictionary")
+	parser.add_argument("-o", "--outDir", default='../output/', help="Output dictionary")
 
 	args = parser.parse_args()
 	topic_file = args.topicFileo
