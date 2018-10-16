@@ -150,8 +150,8 @@ class BuildSubNetwork:
 		from topicDistribution import topic
 		from midIndex import mid
 
-		mid_id_user100 = "../data/mid_id_user" + str(user_num)  # mid_id_user100
-		target_file = "../data/topic_assign_user"+str(user_num)+"_lda"  # topic_assign_user100
+		mid_id_user100 = "mid_id_user" + str(user_num)  # mid_id_user100
+		target_file = "topic_assign_user"+str(user_num)+"_lda"  # topic_assign_user100
 		# with codecs.open(topic_assign_file, mode='r', encoding='utf-8') as topic_file:
 		# 	topic_assign_np = np.array(list(topic_file.readlines()))
 		topic_assign_np = np.array(topic)
