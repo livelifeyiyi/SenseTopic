@@ -120,6 +120,8 @@ class ProfileEvolution:
 				neighbors_i = self.neighbors(user, t - 1, 0)
 				sum_h = 0.0
 				for h in neighbors_i:
+					if selected_user.index(min(neighbors_i)) >= self.user_num:
+						break
 					uid_h = selected_user.index(h)
 					eta_h = eta[uid_h]
 					sum_h += self.L_hit(h, user, t - 1, eta_h) * self.user_interest[t-1][:, uid_h]  # self.U_it(h, t - 1)
@@ -155,6 +157,8 @@ class ProfileEvolution:
 				neighbors_i = self.neighbors(user_i, t - 1, 0)
 				sum_h = 0.0
 				for user_h in neighbors_i:
+					if selected_user.index(min(neighbors_i)) >= self.user_num:
+						break
 					uid_h = selected_user.index(user_h)
 					is_friend = 0  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
 					friends_i = self.neighbors(user_i, t, 1)
@@ -208,6 +212,8 @@ class ProfileEvolution:
 		neighbors_i = self.neighbors(user, time-1, 0)
 		sum_h = 0.0
 		for h in neighbors_i:
+			if selected_user.index(min(neighbors_i)) >= self.user_num:
+				break
 			index_h = selected_user.index(h)
 			eta_h = self.eta[index_h]
 			sum_h += self.L_hit(h, user, time-1, eta_h) * self.U_it(index_h, time-1)
