@@ -129,7 +129,8 @@ class ProfileEvolution:
 			min_target = lambda_U * sum_t
 			# gamma_i -= self.learning_rate*min_target
 			# gamma_i = self.pi_x(gamma_i-self.learning_rate*min_target)
-			gamma_i -= self.learning_rate * self.pi_x(gamma_i - min_target)
+			inp = gamma_i - min_target
+			gamma_i -= self.learning_rate * self.pi_x(inp)
 			print "gamma: " + str(gamma_i)
 		return gamma_i
 
@@ -221,11 +222,19 @@ class ProfileEvolution:
 		if flag == 0:
 			with codecs.open(self.rootDir + 'neighbors_flag_0.json', mode='r') as infile:
 				neighbors_0 = json.load(infile)
-				neighbors = [int(i) for i in neighbors_0[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
+				try:
+					neighbors = [int(i) for i in neighbors_0[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
+				except Exception as e:
+					print e
+					neighbors = []
 		else:
 			with codecs.open(self.rootDir + 'neighbors_flag_1.json', mode='r') as infile:
 				neighbors_1 = json.load(infile)
-				neighbors = [int(i) for i in neighbors_1[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
+				try:
+					neighbors = [int(i) for i in neighbors_1[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
+				except Exception as e:
+					print e
+					neighbors = []
 		return neighbors
 
 	def L_hit(self, user_h, user_i, time, eta):
@@ -245,7 +254,10 @@ class ProfileEvolution:
 	def get_friend_type(self, user1, user2, time):
 		# input user id
 		# friend_type = np.load(self.rootDir + 'friend_type_uijt.npy')
-		return self.friend_type[time][selected_user.index(user1)][selected_user.index(user2)]
+		try:
+			return self.friend_type[time][selected_user.index(user1)][selected_user.index(user2)]
+		except Exception as e:
+			return 0
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
