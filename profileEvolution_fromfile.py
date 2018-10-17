@@ -3,6 +3,7 @@ import codecs
 import json
 import numpy as np
 from selected_user import selected_user
+# selected_user = [2959]
 
 
 class ProfileEvolution:
@@ -68,9 +69,9 @@ class ProfileEvolution:
 
 		sum_userh = 0.0
 		for h in user_h:
-			uid_h = selected_user.index(h)
-			if selected_user.index(min(user_h)) >= self.user_num:
+			if min(user_h) > selected_user[-1] or selected_user.index(min(user_h)) >= self.user_num:
 				break
+			uid_h = selected_user.index(h)
 			gamma_h = gamma[uid_h]
 			eta_h = eta[uid_h]
 			sum_userh += gamma_h * self.L_hit(h, user, time, eta_h) * (self.Uit_hat(h, time + 1, gamma_h) - self.U_it(uid_h, time + 1))
@@ -121,7 +122,7 @@ class ProfileEvolution:
 				neighbors_i = self.neighbors(user, t - 1, 0)
 				sum_h = 0.0
 				for h in neighbors_i:
-					if selected_user.index(min(neighbors_i)) >= self.user_num:
+					if min(neighbors_i) > selected_user[-1] or selected_user.index(min(neighbors_i)) >= self.user_num:
 						break
 					uid_h = selected_user.index(h)
 					eta_h = eta[uid_h]
@@ -158,7 +159,7 @@ class ProfileEvolution:
 				neighbors_i = self.neighbors(user_i, t - 1, 0)
 				sum_h = 0.0
 				for user_h in neighbors_i:
-					if selected_user.index(min(neighbors_i)) >= self.user_num:
+					if min(neighbors_i) > selected_user[-1] or selected_user.index(min(neighbors_i)) >= self.user_num:
 						break
 					uid_h = selected_user.index(user_h)
 					is_friend = 0  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
@@ -213,7 +214,7 @@ class ProfileEvolution:
 		neighbors_i = self.neighbors(user, time-1, 0)
 		sum_h = 0.0
 		for h in neighbors_i:
-			if selected_user.index(min(neighbors_i)) >= self.user_num:
+			if min(neighbors_i) > selected_user[-1] or  selected_user.index(min(neighbors_i)) >= self.user_num:
 				break
 			index_h = selected_user.index(h)
 			eta_h = self.eta[index_h]
