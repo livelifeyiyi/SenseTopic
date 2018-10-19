@@ -296,7 +296,10 @@ if __name__ == '__main__':
 	outDir = args.outDir
 
 	# selected_user = [2778, 2959]
-	# selected_user = selected_user[0:user_num]
+	try:
+		selected_user = selected_user[0:user_num]
+	except Exception as e:
+		pass
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
 	Profile = ProfileEvolution(topic_file=topic_file,
