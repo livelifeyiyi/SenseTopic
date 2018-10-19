@@ -34,8 +34,8 @@ class ProfileEvolution:
 			self.topic_assign_np = np.array(topic_assign).T  # D*M
 		else:
 			self.topic_assign_np = np.loadtxt(self.topic_file).T
-		# self.doc_num = len(self.topic_assign_np)   # M
-		self.doc_num = self.topic_assign_np.size  # M
+		self.doc_num = len(self.topic_assign_np[0])   # M
+		# self.doc_num = self.topic_assign_np.size  # M
 		print("Reading Actual_rij_t.npy file......")
 		# self.R_ij = np.ones((self.time_num, self.user_num, self.doc_num), dtype='int')
 		self.R_ij = np.load(self.rootDir+'Actual_Rij_t.npy')
@@ -85,19 +85,29 @@ class ProfileEvolution:
 			item_set.append(random.randint(0, self.doc_num-1))  # choose mini_batch number of documents' ids
 		for iter in range(self.max_iter):
 			print("Iteration: " + str(iter))
+			# index = 0
+			target_min_Uit = np.zeros(self.D)
 			for item in item_set:  # range(self.doc_num):
 				Y_ijt, R_ijt = self.Y_R_ijt(user, item, time)
 				# item j
 				uid_time = self.U_it(user_id, time)
 				v_j_item = self.V_j(item)
-				target_min_Uit = np.add(Y_ijt * (np.dot(uid_time, v_j_item) - R_ijt) *v_j_item, lambda_U*(uid_time-self.Uit_hat(user, time, gamma_i)))
-				target_min_Uit = np.add(target_min_Uit, lambda_U*(1-gamma_i)*(self.U_it(user_id, time+1)-self.Uit_hat(user, time+1, gamma_i)))
-				target_min_Uit = np.add(target_min_Uit, lambda_U*sum_userh)
 
-			min_Uit = min_Uit - self.learning_rate * target_min_Uit  # )np.add
-			if np.isnan(np.sum(min_Uit)):
-				return self.user_interest[time][:, user_id]
-			self.update_U_it(min_Uit, user_id, time)
+				target_min_Uit_tmp = np.add(target_min_Uit, Y_ijt * (np.dot(uid_time, v_j_item) - R_ijt) * v_j_item)
+				target_min_Uit_tmp = np.add(target_min_Uit_tmp, lambda_U*(uid_time-self.Uit_hat(user, time, gamma_i)))
+				target_min_Uit_tmp = np.add(target_min_Uit_tmp, lambda_U*(1-gamma_i)*(self.U_it(user_id, time+1)-self.Uit_hat(user, time+1, gamma_i)))
+				target_min_Uit_tmp = np.add(target_min_Uit_tmp, lambda_U*sum_userh)
+				if np.isnan(np.sum(target_min_Uit_tmp)):
+					break
+				else:
+					target_min_Uit = target_min_Uit_tmp
+				# print index, target_min_Uit
+				# index += 1
+
+			min_Uit_tmp = min_Uit - self.learning_rate * target_min_Uit  # )np.add
+			if not np.isnan(np.sum(min_Uit_tmp)):
+				min_Uit = min_Uit_tmp
+				self.update_U_it(min_Uit, user_id, time)
 			print min_Uit
 		return min_Uit
 
