@@ -32,7 +32,8 @@ class ProfileEvolution:
 			self.topic_assign_np = np.array(topic_assign).T  # D*M
 		else:
 			self.topic_assign_np = np.loadtxt(self.topic_file).T
-		self.doc_num = len(self.topic_assign_np)   # M
+		# self.doc_num = len(self.topic_assign_np)   # M
+		self.doc_num = self.topic_assign_np.size  # M
 		print("Reading Actual_rij_t.npy file......")
 		# self.R_ij = np.ones((self.time_num, self.user_num, self.doc_num), dtype='int')
 		self.R_ij = np.load(self.rootDir+'Actual_Rij_t.npy')
@@ -295,7 +296,7 @@ if __name__ == '__main__':
 	outDir = args.outDir
 
 	# selected_user = [2778, 2959]
-	selected_user = selected_user[0:user_num]
+	# selected_user = selected_user[0:user_num]
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
 	Profile = ProfileEvolution(topic_file=topic_file,
