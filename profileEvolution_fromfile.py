@@ -1,12 +1,14 @@
 import argparse
 import codecs
 import json
+import random
+
 import numpy as np
 from selected_user import selected_user
 
 
 class ProfileEvolution:
-	def __init__(self, topic_file, learning_rate, max_iter, feature_dimension, user_num, time_num, topic_type, dataDir, outDir):
+	def __init__(self, topic_file, learning_rate, max_iter, minibatch, feature_dimension, user_num, time_num, topic_type, dataDir, outDir):
 		self.D = int(feature_dimension)
 		# conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
 		# self.cursor, self.db = conDB.connect_db()
@@ -14,7 +16,7 @@ class ProfileEvolution:
 		self.user_num = int(user_num)
 		self.time_num = int(time_num)
 		self.max_iter = int(max_iter)
-		# self.minibatch = int(minibatch)
+		self.minibatch = int(minibatch)
 		self.learning_rate = float(learning_rate)
 		# self.mid_dir = mid_dir
 		# self.item_mid_map = np.loadtxt(self.mid_dir)
@@ -78,12 +80,12 @@ class ProfileEvolution:
 			eta_h = eta[uid_h]
 			sum_userh += gamma_h * self.L_hit(h, user, time, eta_h) * (self.Uit_hat(h, time + 1, gamma_h) - self.U_it(uid_h, time + 1))
 		min_Uit = np.zeros(self.D)
-		# item_set = []
-		# for minb in range(self.minibatch):
-		# 	item_set.append(random.randint(0, self.doc_num-1))  # choose mini_batch number of documents' ids
+		item_set = []
+		for minb in range(self.minibatch):
+			item_set.append(random.randint(0, self.doc_num-1))  # choose mini_batch number of documents' ids
 		for iter in range(self.max_iter):
 			print("Iteration: " + str(iter))
-			for item in range(self.doc_num):
+			for item in item_set:  # range(self.doc_num):
 				Y_ijt, R_ijt = self.Y_R_ijt(user, item, time)
 				# item j
 				uid_time = self.U_it(user_id, time)
@@ -274,7 +276,7 @@ if __name__ == '__main__':
 	parser.add_argument("-topicFile", default="../data/topic_assign_user2000", help="Topic assignment file")
 	# parser.add_argument("-mid_dir", default="../data/mid_id_user2000", help="The dictionary of mid-id map file")
 	parser.add_argument("-l", "--learning_rate", default=0.001, help="The learning rate of SGD for Uit")
-	# parser.add_argument("-b", "--minibatch", default=1000, help="Number of minibatch of SGD (subset of documents)")
+	parser.add_argument("-b", "--minibatch", default=1000, help="Number of minibatch of SGD (subset of documents)")
 	parser.add_argument("-i", "--max_iteration", default=1000, help="The max iteration of SGD")
 	parser.add_argument("-f", "--feature_dimension", default=100, help="Dimension of features (topic number)")
 	parser.add_argument("-u", "--user_num", default=2000, help="Number of users to build subnetwork")
@@ -285,6 +287,7 @@ if __name__ == '__main__':
 
 	args = parser.parse_args()
 	topic_file = args.topicFile
+	minibatch = args.minibatch
 	# mid_dir = args.mid_dir
 	learning_rate = args.learning_rate
 	max_iteration = args.max_iteration
@@ -302,7 +305,7 @@ if __name__ == '__main__':
 		pass
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
-	Profile = ProfileEvolution(topic_file=topic_file,
+	Profile = ProfileEvolution(topic_file=topic_file, minibatch=minibatch,
 							   learning_rate=learning_rate, max_iter=max_iteration,
 							   feature_dimension=feature_dimension, user_num=user_num, time_num=time_num,
 							   topic_type=topic_type, dataDir=rootDir, outDir=outDir)
