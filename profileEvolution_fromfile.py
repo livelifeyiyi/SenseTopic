@@ -70,7 +70,7 @@ class ProfileEvolution:
 
 		sum_userh = 0.0
 		for h in user_h:
-			if min(user_h) > selected_user[-1] or selected_user.index(min(user_h)) >= self.user_num:
+			if h > selected_user[-1]:
 				break
 			uid_h = selected_user.index(h)
 			gamma_h = gamma[uid_h]
@@ -123,7 +123,7 @@ class ProfileEvolution:
 				neighbors_i = self.neighbors(user, t - 1, 0)
 				sum_h = 0.0
 				for h in neighbors_i:
-					if min(neighbors_i) > selected_user[-1] or selected_user.index(min(neighbors_i)) >= self.user_num:
+					if h > selected_user[-1]:
 						break
 					uid_h = selected_user.index(h)
 					eta_h = eta[uid_h]
@@ -160,7 +160,7 @@ class ProfileEvolution:
 				neighbors_i = self.neighbors(user_i, t - 1, 0)
 				sum_h = 0.0
 				for user_h in neighbors_i:
-					if min(neighbors_i) > selected_user[-1] or selected_user.index(min(neighbors_i)) >= self.user_num:
+					if user_h > selected_user[-1]:
 						break
 					uid_h = selected_user.index(user_h)
 					is_friend = 0  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
@@ -215,7 +215,7 @@ class ProfileEvolution:
 		neighbors_i = self.neighbors(user, time-1, 0)
 		sum_h = 0.0
 		for h in neighbors_i:
-			if min(neighbors_i) > selected_user[-1] or selected_user.index(min(neighbors_i)) >= self.user_num:
+			if h > selected_user[-1]:
 				break
 			index_h = selected_user.index(h)
 			eta_h = self.eta[index_h]
@@ -294,7 +294,8 @@ if __name__ == '__main__':
 	rootDir = args.rootDir
 	outDir = args.outDir
 
-	selected_user = selected_user[0:user_num]
+	selected_user = [2778, 2959]
+	# selected_user = selected_user[0:user_num]
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
 	Profile = ProfileEvolution(topic_file=topic_file,
