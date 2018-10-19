@@ -3,7 +3,6 @@ import codecs
 import json
 import numpy as np
 from selected_user import selected_user
-# selected_user = [2959]
 
 
 class ProfileEvolution:
@@ -35,9 +34,11 @@ class ProfileEvolution:
 			self.topic_assign_np = np.loadtxt(self.topic_file).T
 		self.doc_num = len(self.topic_assign_np)   # M
 		print("Reading Actual_rij_t.npy file......")
-		self.R_ij = np.load(self.rootDir+'Actual_Rij_t.npy')
+		self.R_ij = np.ones((self.time_num, self.user_num, self.doc_num), dtype='int')
+		# self.R_ij = np.load(self.rootDir+'Actual_Rij_t.npy')
 		print("Reading friend_type_uijt.npy file......")
-		self.friend_type = np.load(self.rootDir + 'friend_type_uijt.npy')
+		self.friend_type = np.zeros((self.time_num, self.user_num, self.user_num))
+		# self.friend_type = np.load(self.rootDir + 'friend_type_uijt.npy')
 		print("The number of documents is: " + str(self.doc_num))
 		print("The number of topics is: " + str(self.D))
 		print("The number of users is: " + str(self.user_num))
@@ -214,7 +215,7 @@ class ProfileEvolution:
 		neighbors_i = self.neighbors(user, time-1, 0)
 		sum_h = 0.0
 		for h in neighbors_i:
-			if min(neighbors_i) > selected_user[-1] or  selected_user.index(min(neighbors_i)) >= self.user_num:
+			if min(neighbors_i) > selected_user[-1] or selected_user.index(min(neighbors_i)) >= self.user_num:
 				break
 			index_h = selected_user.index(h)
 			eta_h = self.eta[index_h]
@@ -293,6 +294,7 @@ if __name__ == '__main__':
 	rootDir = args.rootDir
 	outDir = args.outDir
 
+	selected_user = selected_user[0:user_num]
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
 	Profile = ProfileEvolution(topic_file=topic_file,
