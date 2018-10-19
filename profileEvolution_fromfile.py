@@ -46,8 +46,8 @@ class ProfileEvolution:
 		# initialize user interest score: U
 		self.user_interest = np.ones((self.time_num, self.D, self.user_num))
 		self.user_interest_Uit_hat = np.ones((self.time_num, self.D, self.user_num))
-		self.gamma = np.ones(self.user_num)
-		self.eta = np.ones(self.user_num)
+		self.gamma = (np.random.randint(10, size=self.user_num))*0.1
+		self.eta = (np.random.randint(10, size=self.user_num))*0.1
 
 	def SGD_Uit(self, lambda_U, round_num):
 		print("Processing Uit......")
@@ -294,8 +294,8 @@ if __name__ == '__main__':
 	rootDir = args.rootDir
 	outDir = args.outDir
 
-	selected_user = [2778, 2959]
-	# selected_user = selected_user[0:user_num]
+	# selected_user = [2778, 2959]
+	selected_user = selected_user[0:user_num]
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
 	Profile = ProfileEvolution(topic_file=topic_file,
