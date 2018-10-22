@@ -23,7 +23,7 @@ class itemPrediction:
 		self.item_mid_map = np.loadtxt(self.mid_dir)
 		self.topic_type = topic_type
 		print("Reading the topic assignment file......")
-		if self.topic_type == 'dmm':
+		if self.topic_type == 'DMM':
 			topic_assign = []
 			for doc_id, topic_num in enumerate(codecs.open(self.topic_file, mode='r', encoding='utf-8')):
 				if topic_num:
@@ -63,7 +63,7 @@ class itemPrediction:
 	def Rij_t1(self):
 		# Rij_t_dict = dict.fromkeys([i for i in range(20, self.time_num-1)], rij_dict)
 		Rijt = np.ones((self.time_num, self.user_num, self.doc_num), dtype='int')
-		for time in range(20, self.time_num-1):  # t in time_sequence; count from 1
+		for time in range(1, self.time_num-1):  # t in time_sequence; count from 1
 			# rij_dict = dict.fromkeys([i for i in range(self.user_num)], [])
 			for user_id in range(self.user_num):  # i in (N)
 				for item_id in range(self.doc_num):
@@ -131,10 +131,11 @@ if __name__ == '__main__':
 	parser.add_argument("-topicFile", help="Topic assignment file")
 	parser.add_argument("-mid_dir", help="The dictionary of mid-id map file")
 	parser.add_argument("-f", "--feature_dimension", default=50, help="Dimension of features (topic number)")
-	parser.add_argument("-u", "--user_num", default=10000, help="Number of users to build subnetwork")
-	parser.add_argument("-t", "--time_num", default=30, help="Number of time sequence")
+	parser.add_argument("-u", "--user_num", default=2000, help="Number of users to build subnetwork")
+	parser.add_argument("-t", "--time_num", default=31, help="Number of time sequence")
 	parser.add_argument("-i", "--iteround", default=1, help="Number of iterations")
 	parser.add_argument("-r", "--root_dir", default='./', help="Root dictionary")
+	parser.add_argument("-tt", "--topic_type", default='DMM', help="Root dictionary")
 
 	args = parser.parse_args()
 	pwd = args.dbpwd
@@ -146,7 +147,8 @@ if __name__ == '__main__':
 	time_num = args.time_num
 	iteround = args.iteround
 	rootDir = args.root_dir
+	topic_type = args.topic_type
 
 	IP = itemPrediction(dbip=dbip, dbname='db_weibodata', pwd=pwd, topic_file=topic_file, mid_dir=mid_dir,
-	feature_dimension=feature_dimension, user_num=user_num, time_num=time_num, iteround=iteround, rootDir=rootDir)
+	feature_dimension=feature_dimension, user_num=user_num, time_num=time_num, iteround=iteround, rootDir=rootDir, topic_type=topic_type)
 	IP.Rij_t1()

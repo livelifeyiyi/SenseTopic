@@ -79,37 +79,38 @@ class ProfileEvolution:
 			gamma_h = gamma[uid_h]
 			eta_h = eta[uid_h]
 			sum_userh += gamma_h * self.L_hit(h, user, time, eta_h) * (self.Uit_hat(h, time + 1, gamma_h) - self.U_it(uid_h, time + 1))
-		min_Uit = np.zeros(self.D)
+		Uit = self.U_it(user_id, time)
 		item_set = []
 		for minb in range(self.minibatch):
 			item_set.append(random.randint(0, self.doc_num-1))  # choose mini_batch number of documents' ids
-		for iter in range(self.max_iter):
-			print("Iteration: " + str(iter))
 			# index = 0
-			target_min_Uit = np.zeros(self.D)
-			for item in item_set:  # range(self.doc_num):
-				Y_ijt, R_ijt = self.Y_R_ijt(user, item, time)
-				# item j
-				uid_time = self.U_it(user_id, time)
-				v_j_item = self.V_j(item)
+		target_min_Uit = np.zeros(self.D)
+		print("Calculating target_min_Uit......")
+		for item in item_set:  # range(self.doc_num):
+			Y_ijt, R_ijt = self.Y_R_ijt(user, item, time)
+			# item j
+			uid_time = self.U_it(user_id, time)
+			v_j_item = self.V_j(item)
 
-				target_min_Uit_tmp = np.add(target_min_Uit, Y_ijt * (np.dot(uid_time, v_j_item) - R_ijt) * v_j_item)
-				target_min_Uit_tmp = np.add(target_min_Uit_tmp, lambda_U*(uid_time-self.Uit_hat(user, time, gamma_i)))
-				target_min_Uit_tmp = np.add(target_min_Uit_tmp, lambda_U*(1-gamma_i)*(self.U_it(user_id, time+1)-self.Uit_hat(user, time+1, gamma_i)))
-				target_min_Uit_tmp = np.add(target_min_Uit_tmp, lambda_U*sum_userh)
-				if np.isnan(np.sum(target_min_Uit_tmp)):
-					break
-				else:
-					target_min_Uit = target_min_Uit_tmp
+			target_min_Uit_tmp = np.add(target_min_Uit, Y_ijt * (np.dot(uid_time, v_j_item) - R_ijt) * v_j_item)
+			target_min_Uit_tmp = np.add(target_min_Uit_tmp, lambda_U*(uid_time-self.Uit_hat(user, time, gamma_i)))
+			target_min_Uit_tmp = np.add(target_min_Uit_tmp, lambda_U*(1-gamma_i)*(self.U_it(user_id, time+1)-self.Uit_hat(user, time+1, gamma_i)))
+			target_min_Uit_tmp = np.add(target_min_Uit_tmp, lambda_U*sum_userh)
+			if np.isnan(np.sum(target_min_Uit_tmp)):
+				break
+			else:
+				target_min_Uit = target_min_Uit_tmp
 				# print index, target_min_Uit
 				# index += 1
-
-			min_Uit_tmp = min_Uit - self.learning_rate * target_min_Uit  # )np.add
+		print("Iteration......")
+		for iter in range(self.max_iter):
+			# print("Iteration: " + str(iter))
+			min_Uit_tmp = Uit - self.learning_rate * target_min_Uit  # )np.add
 			if not np.isnan(np.sum(min_Uit_tmp)):
-				min_Uit = min_Uit_tmp
-				self.update_U_it(min_Uit, user_id, time)
-			print min_Uit
-		return min_Uit
+				Uit = min_Uit_tmp
+				self.update_U_it(Uit, user_id, time)
+		print Uit
+		return Uit
 
 	def PGD_gamma_eta(self, lambda_U, round_num):
 		print("Processing gamma and eta......")
@@ -130,26 +131,27 @@ class ProfileEvolution:
 		user_id = selected_user.index(user)
 		sum_t = 0.0
 		gamma_i = 1.0
-		for iter in range(self.max_iter):
-			print("Iteration: " + str(iter))
-			for t in range(1, self.time_num-1):
-				neighbors_i = self.neighbors(user, t - 1, 0)
-				sum_h = 0.0
-				for h in neighbors_i:
-					if h > selected_user[-1]:
-						break
-					uid_h = selected_user.index(h)
-					eta_h = eta[uid_h]
-					sum_h += self.L_hit(h, user, t - 1, eta_h) * self.user_interest[t-1][:, uid_h]  # self.U_it(h, t - 1)
-				# sum_t += (self.Uit_hat(user, t, gamma_i) - self.U_it(user, t)) * (sum_h-self.U_it(user, t - 1))
-				sum_t += (
-					self.user_interest_Uit_hat[t][:, user_id] - self.user_interest[t][:, user_id] * (sum_h - self.user_interest[t-1][:, user_id]))
-			min_target = lambda_U * sum_t
+		print("Calculating min target......")
+		for t in range(1, self.time_num-1):
+			neighbors_i = self.neighbors(user, t - 1, 0)
+			sum_h = 0.0
+			for h in neighbors_i:
+				if h > selected_user[-1]:
+					break
+				uid_h = selected_user.index(h)
+				eta_h = eta[uid_h]
+				sum_h += self.L_hit(h, user, t - 1, eta_h) * self.user_interest[t-1][:, uid_h]  # self.U_it(h, t - 1)
+			# sum_t += (self.Uit_hat(user, t, gamma_i) - self.U_it(user, t)) * (sum_h-self.U_it(user, t - 1))
+			sum_t += (
+				self.user_interest_Uit_hat[t][:, user_id] - self.user_interest[t][:, user_id] * (sum_h - self.user_interest[t-1][:, user_id]))
+		min_target = lambda_U * sum_t
 			# gamma_i -= self.learning_rate*min_target
 			# gamma_i = self.pi_x(gamma_i-self.learning_rate*min_target)
+		for iter in range(self.max_iter):
+			# print("Iteration: " + str(iter))
 			inp = gamma_i - min_target
 			gamma_i -= self.learning_rate * self.pi_x(inp)
-			print "gamma: " + str(gamma_i)
+		print "gamma: " + str(gamma_i)
 		return gamma_i
 
 	def pi_x(self, x):
@@ -167,31 +169,33 @@ class ProfileEvolution:
 		uid_i = selected_user.index(user_i)
 		gamma_i = gamma[uid_i]
 		eta_i = 1.0
-		for iter in range(self.max_iter):
-			print("Iteration: " + str(iter))
-			for t in range(1, self.time_num-1):
-				neighbors_i = self.neighbors(user_i, t - 1, 0)
-				sum_h = 0.0
-				for user_h in neighbors_i:
-					if user_h > selected_user[-1]:
-						break
-					uid_h = selected_user.index(user_h)
-					is_friend = 0  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
-					friends_i = self.neighbors(user_i, t, 1)
-					if len(friends_i) != 0:
-						friends_h = self.neighbors(user_h, t, 1)
-						intersec = list(set(friends_i).intersection(set(friends_h)))
-						sum_h += (is_friend - float(len(intersec) / len(friends_i))) * self.user_interest[t-1][:, uid_h]  # self.U_it(user_h, t-1)
-					else:
-						sum_h += 0
-				# sum_t += (self.Uit_hat(user_i, t, gamma_i) - self.U_it(user_i, t)) * (gamma_i * sum_h + (1-gamma_i) * self.U_it(user_, t-1))
-				sum_t += (self.user_interest_Uit_hat[t][:, uid_i] -
-						  self.user_interest[t][:, uid_i] * (gamma_i * sum_h + (1 - gamma_i) * self.user_interest[t-1][:, uid_i]))
+		print("Calculating min target......")
+		for t in range(1, self.time_num-1):
+			neighbors_i = self.neighbors(user_i, t - 1, 0)
+			sum_h = 0.0
+			for user_h in neighbors_i:
+				if user_h > selected_user[-1]:
+					break
+				uid_h = selected_user.index(user_h)
+				is_friend = 0  # =0 if user_h has no link with user_i, =0.5 if they are one way fallow, =1 if they are friends
+				friends_i = self.neighbors(user_i, t, 1)
+				if len(friends_i) != 0:
+					friends_h = self.neighbors(user_h, t, 1)
+					intersec = list(set(friends_i).intersection(set(friends_h)))
+					sum_h += (is_friend - float(len(intersec) / len(friends_i))) * self.user_interest[t-1][:, uid_h]  # self.U_it(user_h, t-1)
+				else:
+					sum_h += 0
+			# sum_t += (self.Uit_hat(user_i, t, gamma_i) - self.U_it(user_i, t)) * (gamma_i * sum_h + (1-gamma_i) * self.U_it(user_, t-1))
+			sum_t += (self.user_interest_Uit_hat[t][:, uid_i] -
+					  self.user_interest[t][:, uid_i] * (gamma_i * sum_h + (1 - gamma_i) * self.user_interest[t-1][:, uid_i]))
 
-			min_target = lambda_U * sum_t
+		min_target = lambda_U * sum_t
+		print("Iteration......")
+		for iter in range(self.max_iter):
+			# print("Iteration: " + str(iter))
 			eta_i -= self.learning_rate * self.pi_x(eta_i - min_target)
 			# eta_i = self.pi_x(eta_i - self.learning_rate * min_target)
-			print "eta: " + str(eta_i)
+		print "eta: " + str(eta_i)
 		return eta_i
 
 	def Y_R_ijt(self, user_i, item_j, time):
