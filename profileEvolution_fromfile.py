@@ -325,8 +325,8 @@ if __name__ == '__main__':
 							   topic_type=topic_type, dataDir=rootDir, outDir=outDir)
 	# gamma = np.array([0.5 for i in range(user_num)])
 	# eta = np.array([0.5 for i in range(user_num)])
-	lambda_U = 0.3
-	for i in range(10):
+	lambda_U = 1  # 0.3
+	for i in range(3):
 		print(str(i) + "-th round......")
 		Profile.SGD_Uit(lambda_U, i)
 		Profile.PGD_gamma_eta(lambda_U, i)
