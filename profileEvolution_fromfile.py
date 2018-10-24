@@ -4,7 +4,7 @@ import json
 import random
 
 import numpy as np
-from selected_user import selected_user
+from lastfmData.selected_user import selected_user
 
 
 class ProfileEvolution:
@@ -54,7 +54,7 @@ class ProfileEvolution:
 
 	def SGD_Uit(self, lambda_U, round_num):
 		print("Processing Uit......")
-		for time in range(1, self.time_num-1):  # t in time_sequence; count from 1
+		for time in range(0, self.time_num-1):  # t in time_sequence; count from 1
 			for user_id in range(self.user_num):  # i in (N)
 				user = selected_user[user_id]		# get the user id
 				print("Processing user " + str(user) + " with id number " + str(user_id) + " at time " + str(time) + "......")
@@ -80,10 +80,13 @@ class ProfileEvolution:
 			eta_h = eta[uid_h]
 			sum_userh += gamma_h * self.L_hit(h, user, time, eta_h) * (self.Uit_hat(h, time + 1, gamma_h) - self.U_it(uid_h, time + 1))
 		Uit = self.U_it(user_id, time)
-		item_set = []
-		for minb in range(self.minibatch):
-			item_set.append(random.randint(0, self.doc_num-1))  # choose mini_batch number of documents' ids
-			# index = 0
+		R_it = self.R_ij[0][user_id]
+		item_set = [index for index, rijt in enumerate(R_it) if rijt != 0]
+
+		if len(item_set) == 0:
+			for minb in range(self.minibatch):
+				item_set.append(random.randint(0, self.doc_num-1))  # choose mini_batch number of documents' ids
+				# index = 0
 		target_min_Uit = np.zeros(self.D)
 		print("Calculating target_min_Uit......")
 		for item in item_set:  # range(self.doc_num):
@@ -91,7 +94,8 @@ class ProfileEvolution:
 			# item j
 			uid_time = self.U_it(user_id, time)
 			v_j_item = self.V_j(item)
-
+			if np.isnan(np.sum(v_j_item)):
+				continue
 			target_min_Uit_tmp = np.add(target_min_Uit, Y_ijt * (np.dot(uid_time, v_j_item) - R_ijt) * v_j_item)
 			target_min_Uit_tmp = np.add(target_min_Uit_tmp, lambda_U*(uid_time-self.Uit_hat(user, time, gamma_i)))
 			target_min_Uit_tmp = np.add(target_min_Uit_tmp, lambda_U*(1-gamma_i)*(self.U_it(user_id, time+1)-self.Uit_hat(user, time+1, gamma_i)))
@@ -272,18 +276,19 @@ class ProfileEvolution:
 		if len(friends_i) != 0:
 			friends_h = self.neighbors(user_h, time, 1)
 			intersec = list(set(friends_i).intersection(set(friends_h)))
-			L_hit = eta * is_friend + (1-eta) * float(len(intersec)/len(friends_i))
+			L_hit = eta * is_friend + (1-eta) * float(len(intersec)/float(len(friends_i)))
 		else:
-			L_hit = 0
+			L_hit = 0.0
 		return L_hit
 
 	def get_friend_type(self, user1, user2, time):
 		# input user id
 		# friend_type = np.load(self.rootDir + 'friend_type_uijt.npy')
+		time = 0
 		try:
 			return self.friend_type[time][selected_user.index(user1)][selected_user.index(user2)]
 		except Exception as e:
-			return 0
+			return 0.0
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
@@ -317,6 +322,7 @@ if __name__ == '__main__':
 		selected_user = selected_user[0:user_num]
 	except Exception as e:
 		pass
+	
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
 	Profile = ProfileEvolution(topic_file=topic_file, minibatch=minibatch,
@@ -326,7 +332,7 @@ if __name__ == '__main__':
 	# gamma = np.array([0.5 for i in range(user_num)])
 	# eta = np.array([0.5 for i in range(user_num)])
 	lambda_U = 1  # 0.3
-	for i in range(3):
+	for i in range(10):
 		print(str(i) + "-th round......")
 		Profile.SGD_Uit(lambda_U, i)
 		Profile.PGD_gamma_eta(lambda_U, i)
