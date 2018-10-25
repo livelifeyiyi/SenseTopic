@@ -50,9 +50,9 @@ def get_index_tags():
 def get_R_ui_t():
 	user_tag_info = pd.read_table(rootDir + 'user_taggedartists.dat', sep='\t', header=0)
 	user_num = 1892
-	item_num = 17632
+	item_num = 12316  # 17632
 	time_num = 8
-	aID_id = np.loadtxt(rootDir+'artistsID_id.txt')
+	aID_id = np.loadtxt(rootDir+'artistsID_id_havetags_havevecs.txt')
 	from selected_user import selected_user
 	R_ua_t = np.zeros((time_num, user_num, item_num), dtype='int')
 	with codecs.open(rootDir + "user_artists.dat", mode='r', encoding='utf-8') as uafile:
@@ -73,11 +73,14 @@ def get_R_ui_t():
 			else:
 				time_id = 0
 			# new_line = info + str(time_id) + '\n'
-			art_index = np.where(aID_id == aID)[0][0]
-			user_index = selected_user.index(uID)
-			R_ua_t[time_id][user_index][art_index] = weight
+			try:
+				art_index = np.where(aID_id == aID)[0][0]
+				user_index = selected_user.index(uID)
+				R_ua_t[time_id][user_index][art_index] = weight
+			except Exception as e:
+				print e, aID
 			info = uafile.readline().strip('\n').strip('\r')
-	np.save(rootDir + 'Actual_R_ij_t.npy', R_ua_t)
+	np.save(rootDir + 'Actual_Rij_t.npy', R_ua_t)
 
 
 def get_neighbors():
@@ -88,12 +91,14 @@ def get_neighbors():
 	time_num = 1
 	print("Getting neighbors of each user at different time......")
 	# flag = 0 return all neighbors, =1 return only friends.
-	ni_follow = dict.fromkeys([i for i in range(user_num)], '')
-	follow_dict_flag0 = dict.fromkeys([i for i in range(0, time_num)], ni_follow)
+	# ni_follow = dict.fromkeys([i for i in range(user_num)], '')
+	follow_dict_flag0 = {}  # dict.fromkeys([i for i in range(0, time_num)], ni_follow)
 	# ni_friend = dict.fromkeys([i for i in range(user_num)], list)
 	# friend_dict_flag1 = dict.fromkeys([i for i in range(0, time_num)], ni_friend)
 	for time in range(0, time_num):
 		print("Time: " + str(time))
+		follow_dict_flag0[time] = {}
+		ni_follow = {}
 		for user_id in range(user_num):
 			print("User: " + str(user_id))
 			user = selected_user[user_id]
@@ -114,7 +119,8 @@ def get_neighbors():
 					# follow_dict_flag0[time][user_id].append(user1)
 					follow.append(user1)
 				# user1, user2 = res[0], res[1]
-			follow_dict_flag0[time][user_id] = str(follow)
+			ni_follow[user_id] = str(follow)
+		follow_dict_flag0[time] = ni_follow
 
 		# neighbors = friends
 	print("Writing files......")
@@ -210,9 +216,9 @@ if __name__ == '__main__':
 	rootDir = "E:\\code\\SN2\\lastfm-2k\\"
 	# get_distinct_userID()
 	# get_index_tags()
-	# get_R_ui_t()
+	get_R_ui_t()
 	# get_doc_dictionary()
 	# get_google_vec()
 	# filter_item_no_vec()
 	# get_neighbors()
-	get_friend_type()
+	# get_friend_type()

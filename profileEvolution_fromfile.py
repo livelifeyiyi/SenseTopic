@@ -2,9 +2,10 @@ import argparse
 import codecs
 import json
 import random
+import math
 
 import numpy as np
-from lastfmData.selected_user import selected_user
+from selected_user import selected_user
 
 
 class ProfileEvolution:
@@ -80,7 +81,7 @@ class ProfileEvolution:
 			eta_h = eta[uid_h]
 			sum_userh += gamma_h * self.L_hit(h, user, time, eta_h) * (self.Uit_hat(h, time + 1, gamma_h) - self.U_it(uid_h, time + 1))
 		Uit = self.U_it(user_id, time)
-		R_it = self.R_ij[0][user_id]
+		R_it = self.R_ij[time][user_id]
 		item_set = [index for index, rijt in enumerate(R_it) if rijt != 0]
 
 		if len(item_set) == 0:
@@ -134,11 +135,11 @@ class ProfileEvolution:
 		# user i
 		user_id = selected_user.index(user)
 		sum_t = 0.0
-		gamma_i = 1.0
-		print("Calculating min target......")
+		gamma_i = self.gamma[user_id]  # 1.0
+		print("Calculating min target gamma......")
 		for t in range(1, self.time_num-1):
 			neighbors_i = self.neighbors(user, t - 1, 0)
-			sum_h = 0.0
+			sum_h = np.zeros(self.D)
 			for h in neighbors_i:
 				if h > selected_user[-1]:
 					break
@@ -146,25 +147,37 @@ class ProfileEvolution:
 				eta_h = eta[uid_h]
 				sum_h += self.L_hit(h, user, t - 1, eta_h) * self.user_interest[t-1][:, uid_h]  # self.U_it(h, t - 1)
 			# sum_t += (self.Uit_hat(user, t, gamma_i) - self.U_it(user, t)) * (sum_h-self.U_it(user, t - 1))
-			sum_t += (
-				self.user_interest_Uit_hat[t][:, user_id] - self.user_interest[t][:, user_id] * (sum_h - self.user_interest[t-1][:, user_id]))
+			sum_t += np.dot((self.user_interest_Uit_hat[t][:, user_id] - self.user_interest[t][:, user_id]), (sum_h - self.user_interest[t-1][:, user_id]))
 		min_target = lambda_U * sum_t
 			# gamma_i -= self.learning_rate*min_target
 			# gamma_i = self.pi_x(gamma_i-self.learning_rate*min_target)
 		for iter in range(self.max_iter):
 			# print("Iteration: " + str(iter))
-			inp = gamma_i - min_target
-			gamma_i -= self.learning_rate * self.pi_x(inp)
+			inp = min_target  # gamma_i -
+			gamma_i_tmp = gamma_i - self.learning_rate * self.pi_x(inp)
+			if gamma_i_tmp < 0.0 or gamma_i_tmp > 1.0:
+				break
+			else:
+				gamma_i = gamma_i_tmp
 		print "gamma: " + str(gamma_i)
 		return gamma_i
 
 	def pi_x(self, x):
+		try:
+			exp_num = int(math.log10(abs(x)))  #int(str(x).split('+')[1])
+		except Exception as e:
+			print e, x
+			return 0.0
 		res = []
 		for c in range(0, 11):
-			c_1 = c * 0.1
+			c_1 = c * 0.1  # 10**exp_num  # *0.1
 			# y = np.array([0.5 for i in range(self.user_num)])
-			y = np.array([c_1 - x])
-			res.append(np.linalg.norm(y, ord=2))
+			y = np.array([c_1 - x*0.1*0.1**exp_num])
+			value = np.linalg.norm(y, ord=2)
+			if value > 1.0 or value < 0.0:
+				continue
+			else:
+				res.append(value)
 		# print res
 		return min(res)
 
@@ -172,11 +185,11 @@ class ProfileEvolution:
 		sum_t = 0.0
 		uid_i = selected_user.index(user_i)
 		gamma_i = gamma[uid_i]
-		eta_i = 1.0
-		print("Calculating min target......")
+		eta_i = self.eta[uid_i]   # 1.0
+		print("Calculating min target eta......")
 		for t in range(1, self.time_num-1):
 			neighbors_i = self.neighbors(user_i, t - 1, 0)
-			sum_h = 0.0
+			sum_h = np.zeros(self.D)
 			for user_h in neighbors_i:
 				if user_h > selected_user[-1]:
 					break
@@ -190,14 +203,17 @@ class ProfileEvolution:
 				else:
 					sum_h += 0
 			# sum_t += (self.Uit_hat(user_i, t, gamma_i) - self.U_it(user_i, t)) * (gamma_i * sum_h + (1-gamma_i) * self.U_it(user_, t-1))
-			sum_t += (self.user_interest_Uit_hat[t][:, uid_i] -
-					  self.user_interest[t][:, uid_i] * (gamma_i * sum_h + (1 - gamma_i) * self.user_interest[t-1][:, uid_i]))
+			sum_t += np.dot((self.user_interest_Uit_hat[t][:, uid_i] - self.user_interest[t][:, uid_i]), (gamma_i * sum_h + (1 - gamma_i) * self.user_interest[t-1][:, uid_i]))
 
 		min_target = lambda_U * sum_t
 		print("Iteration......")
 		for iter in range(self.max_iter):
 			# print("Iteration: " + str(iter))
-			eta_i -= self.learning_rate * self.pi_x(eta_i - min_target)
+			eta_i_tmp = eta_i - self.learning_rate * self.pi_x(min_target)
+			if eta_i_tmp < 0.0 or eta_i_tmp > 1.0:
+				break
+			else:
+				eta_i = eta_i_tmp
 			# eta_i = self.pi_x(eta_i - self.learning_rate * min_target)
 		print "eta: " + str(eta_i)
 		return eta_i
@@ -322,7 +338,7 @@ if __name__ == '__main__':
 		selected_user = selected_user[0:user_num]
 	except Exception as e:
 		pass
-	
+
 	# topic_file = 'E:\\code\\SN2\\pDMM-master\\output\\model.filter.sense.topicAssignments'
 	# mid_dir = 'E:\\data\\social netowrks\\weibodata\\processed\\root_content_id.txt'
 	Profile = ProfileEvolution(topic_file=topic_file, minibatch=minibatch,
@@ -331,7 +347,7 @@ if __name__ == '__main__':
 							   topic_type=topic_type, dataDir=rootDir, outDir=outDir)
 	# gamma = np.array([0.5 for i in range(user_num)])
 	# eta = np.array([0.5 for i in range(user_num)])
-	lambda_U = 1  # 0.3
+	lambda_U = 0.1  # 0.3
 	for i in range(10):
 		print(str(i) + "-th round......")
 		Profile.SGD_Uit(lambda_U, i)

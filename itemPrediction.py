@@ -1,7 +1,7 @@
 import argparse
 
 import numpy as np
-import ConnectDB
+# import ConnectDB
 import codecs
 import json
 from selected_user import selected_user
@@ -10,14 +10,14 @@ from selected_user import selected_user
 
 
 class itemPrediction:
-	def __init__(self, dbip, dbname, pwd, topic_file, mid_dir, feature_dimension, user_num, time_num, iteround, rootDir, topic_type):
+	def __init__(self, topic_file, mid_dir, feature_dimension, user_num, time_num, iteround, rootDir, topic_type):
 		self.D = int(feature_dimension)
-		conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
-		self.cursor, self.db = conDB.connect_db()
+		# conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
+		# self.cursor, self.db = conDB.connect_db()
 		self.topic_file = topic_file  # M*1
 		self.user_num = int(user_num)
 		self.time_num = int(time_num)
-		self.iteround = int(iteround)
+		self.iteround = iteround
 		self.mid_dir = mid_dir
 		self.rootDir = rootDir
 		self.item_mid_map = np.loadtxt(self.mid_dir)
@@ -33,36 +33,36 @@ class itemPrediction:
 			self.topic_assign_np = np.array(topic_assign).T  # D*M
 		else:
 			self.topic_assign_np = np.loadtxt(self.topic_file).T
-		self.doc_num = len(topic_assign)   # M
+		self.doc_num = len(self.topic_assign_np[0])   # M
 		print("The number of documents is: " + str(self.doc_num))
 		print("The number of topics is: " + str(self.D))
 		print("The number of users is: " + str(self.user_num))
 		# topic_assign.shape = (self.doc_num, self.D)  # M*D
 		# initialize user interest score: U
 		try:
-			self.user_interest = np.load(self.rootDir + self.topic_type + '_100_U_user_interest_' + self.iteround + '.npy')
+			self.user_interest = np.load(self.rootDir + self.topic_type + '_U_user_interest_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
 			self.user_interest = np.ones((self.time_num, self.D, self.user_num))
 		try:
-			self.user_interest_Uit_hat = np.load(self.rootDir + self.topic_type + '_100_U_user_interest_hat_' + self.iteround + '.npy')
+			self.user_interest_Uit_hat = np.load(self.rootDir + self.topic_type + '_U_user_interest_hat_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
 			self.user_interest_Uit_hat = np.ones((self.time_num, self.D, self.user_num))
 		try:
-			self.gamma = np.load(self.rootDir + self.topic_type + '_100_gamma_' + self.iteround + '.npy')
+			self.gamma = np.load(self.rootDir + self.topic_type + '_gamma_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
 			self.gamma = np.ones(self.user_num)
 		try:
-			self.eta = np.load(self.rootDir + self.topic_type + '_100_eta_' + self.iteround + '.npy')
+			self.eta = np.load(self.rootDir + self.topic_type + '_eta_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
 			self.eta = np.ones(self.user_num)
 
 	def Rij_t1(self):
 		# Rij_t_dict = dict.fromkeys([i for i in range(20, self.time_num-1)], rij_dict)
-		Rijt = np.ones((self.time_num, self.user_num, self.doc_num), dtype='int')
+		Rijt = np.ones((self.time_num, self.user_num, self.doc_num))
 		for time in range(1, self.time_num-1):  # t in time_sequence; count from 1
 			# rij_dict = dict.fromkeys([i for i in range(self.user_num)], [])
 			for user_id in range(self.user_num):  # i in (N)
@@ -93,14 +93,23 @@ class itemPrediction:
 	def neighbors(self, user, time, flag):
 		# flag = 0 return all neighbors, =1 return only friends.
 		# neighbors = []  # list of the users who have a link with user_i
+		user_id = selected_user.index(user)
 		if flag == 0:
 			with codecs.open(self.rootDir + 'neighbors_flag_0.json', mode='r') as infile:
 				neighbors_0 = json.load(infile)
-				neighbors = neighbors_0[time][user]
+				try:
+					neighbors = [int(i) for i in neighbors_0[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
+				except Exception as e:
+					# print e
+					neighbors = []
 		else:
 			with codecs.open(self.rootDir + 'neighbors_flag_1.json', mode='r') as infile:
 				neighbors_1 = json.load(infile)
-				neighbors = neighbors_1[time][user]
+				try:
+					neighbors = [int(i) for i in neighbors_1[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
+				except Exception as e:
+					# print e
+					neighbors = []
 		return neighbors
 
 	def L_hit(self, user_h, user_i, time, eta):
@@ -125,9 +134,7 @@ class itemPrediction:
 		return U_it
 
 if __name__ == '__main__':
-	parser = argparse.ArgumentParser()
-	parser.add_argument("-dbpwd", help="Password of database")
-	parser.add_argument("-dbIP", help="IP address of database")
+	'''parser = argparse.ArgumentParser()
 	parser.add_argument("-topicFile", help="Topic assignment file")
 	parser.add_argument("-mid_dir", help="The dictionary of mid-id map file")
 	parser.add_argument("-f", "--feature_dimension", default=50, help="Dimension of features (topic number)")
@@ -138,17 +145,25 @@ if __name__ == '__main__':
 	parser.add_argument("-tt", "--topic_type", default='DMM', help="Root dictionary")
 
 	args = parser.parse_args()
-	pwd = args.dbpwd
-	dbip = args.dbIP
+
 	topic_file = args.topicFile
 	mid_dir = args.mid_dir
 	feature_dimension = args.feature_dimension
-	user_num = args.user_num
-	time_num = args.time_num
+	user_num = int(args.user_num)
+	time_num = int(args.time_num)
 	iteround = args.iteround
 	rootDir = args.root_dir
-	topic_type = args.topic_type
+	topic_type = args.topic_type'''
 
-	IP = itemPrediction(dbip=dbip, dbname='db_weibodata', pwd=pwd, topic_file=topic_file, mid_dir=mid_dir,
-	feature_dimension=feature_dimension, user_num=user_num, time_num=time_num, iteround=iteround, rootDir=rootDir, topic_type=topic_type)
+	rootDir = "E:/code/SN2/lastfm-2k/"
+	topic_file = "E:/code/SN2/lastfm-2k/lftm_dmm_res/lastfmDMM.theta"
+	mid_dir = "E:/code/SN2/lastfm-2k/artistsID_id_havetags_havevecs.txt"
+	feature_dimension = 10
+	user_num = 1892
+	time_num = 8
+	iteround = str(1)
+	topic_type = "LSTM"
+
+	IP = itemPrediction(topic_file=topic_file, mid_dir=mid_dir,feature_dimension=feature_dimension,
+						user_num=user_num, time_num=time_num, iteround=iteround, rootDir=rootDir, topic_type=topic_type)
 	IP.Rij_t1()

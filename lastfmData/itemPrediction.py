@@ -103,14 +103,13 @@ class itemPrediction:
 		# conDB = ConnectDB.ConnectDB(dbip, dbname, pwd)
 		# self.cursor, self.db = conDB.connect_db()
 		self.topic_file = topic_file  # M*1
-		self.user_num = int(user_num)
-		self.time_num = int(time_num)
+		self.user_num = user_num
+		self.time_num = time_num
 		self.iteround = iteround
 		self.mid_dir = mid_dir
 		self.rootDir = rootDir
 		self.item_mid_map = np.loadtxt(self.mid_dir)
 		self.topic_type = topic_type
-		self.Rijt = np.ones((self.time_num, self.user_num, self.doc_num))
 
 		print("Reading the topic assignment file......")
 		if self.topic_type == 'DMM':
@@ -124,6 +123,8 @@ class itemPrediction:
 		else:
 			self.topic_assign_np = np.loadtxt(self.topic_file).T
 		self.doc_num = len(self.topic_assign_np[0])   # M
+		self.Rijt = np.ones((self.time_num, self.user_num, self.doc_num))
+
 		print("The number of documents is: " + str(self.doc_num))
 		print("The number of topics is: " + str(self.D))
 		print("The number of users is: " + str(self.user_num))
@@ -177,8 +178,8 @@ if __name__ == '__main__':
 	topic_file = args.topicFile
 	mid_dir = args.mid_dir
 	feature_dimension = args.feature_dimension
-	user_num = args.user_num
-	time_num = args.time_num
+	user_num = int(args.user_num)
+	time_num = int(args.time_num)
 	iteround = args.iteround
 	rootDir = args.root_dir
 	topic_type = args.topic_type
