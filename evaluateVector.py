@@ -42,7 +42,7 @@ def get_topic_words(topic_word_file, vector_file):
 							topic_words.append(each_word)
 							labelFile.write(each_word + '\n')
 							topic_word_vec = vectors.ix[each_word.encode('utf-8')].values
-							vecFile.write(np.array2string(topic_word_vec, max_line_width=3000)[1:-1] + '\n')
+							vecFile.write(np.array2string(topic_word_vec, max_line_width=3000, formatter={'float_kind': lambda x: '%6f'%x})[1:-1] + '\n')
 					line = inFile.readline()
 					i += 1
 					print i

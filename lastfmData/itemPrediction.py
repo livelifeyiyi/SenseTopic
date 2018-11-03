@@ -23,6 +23,12 @@ class thread_each_time(threading.Thread):
 		self.user_interest_Uit_hat = user_interest_Uit_hat
 		self.rootDir = rootDir
 		self.user_interest = user_interest
+		self.friend_type = np.load(self.rootDir + 'friend_type_uijt.npy')
+		self.D = topic_num
+		with codecs.open(self.rootDir + 'neighbors_flag_0.json', mode='r') as infile:
+			self.neighbors_0 = json.load(infile)
+		with codecs.open(self.rootDir + 'neighbors_flag_1.json', mode='r') as infile2:
+			self.neighbors_1 = json.load(infile2)
 
 	def run(self):
 		self.each_time_rij(self.threadName, self.time_id)
@@ -30,9 +36,8 @@ class thread_each_time(threading.Thread):
 	def each_time_rij(self, threadName, time):
 		# print(threadName)
 		for user_id in range(self.user_num):  # i in (N)
+			print(str(threadName) + ": Processing user " + str(user_id) + " at time " + str(time) + "......")
 			for item_id in range(self.doc_num):
-				print(str(threadName) + ": Processing user " + str(user_id) + " item " + str(
-					item_id) + " at time " + str(time) + "......")
 				gamma_i = self.gamma[user_id]
 				# user = selected_user[user_id]
 				Uit_t1 = self.Uit_hat(user_id, time + 1, gamma_i)
@@ -44,7 +49,7 @@ class thread_each_time(threading.Thread):
 
 	def Uit_hat(self, user_id, time, gamma_i):  # user i
 		neighbors_i = self.neighbors(user_id, time-1, 0)
-		sum_h = 0.0
+		sum_h = np.zeros(self.D)
 		for h in neighbors_i:
 			index_h = selected_user.index(h)
 			eta_h = self.eta[index_h]
@@ -57,18 +62,14 @@ class thread_each_time(threading.Thread):
 		# flag = 0 return all neighbors, =1 return only friends.
 		# neighbors = []  # list of the users who have a link with user_i
 		if flag == 0:
-			with codecs.open(self.rootDir + 'neighbors_flag_0.json', mode='r') as infile:
-				neighbors_0 = json.load(infile)
 				try:
-					neighbors = [int(i) for i in neighbors_0[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
+					neighbors = [int(i) for i in self.neighbors_0[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
 				except Exception as e:
 					# print e
 					neighbors = []
 		else:
-			with codecs.open(self.rootDir + 'neighbors_flag_1.json', mode='r') as infile:
-				neighbors_1 = json.load(infile)
 				try:
-					neighbors = [int(i) for i in neighbors_1[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
+					neighbors = [int(i) for i in self.neighbors_1[str(time)][str(user_id)][1:-1].replace('L','').split(', ')]
 				except Exception as e:
 					# print e
 					neighbors = []
@@ -87,9 +88,8 @@ class thread_each_time(threading.Thread):
 		return L_hit
 
 	def get_friend_type(self, user1_id, user2_id, time):
-		friend_type = np.load(self.rootDir + 'friend_type_uijt.npy')
 		# return friend_type[time][selected_user.index(user1)][selected_user.index(user2)]
-		return friend_type[time][user1_id][user2_id]
+		return self.friend_type[time][user1_id][user2_id]
 
 	def U_it(self, user_id, time):
 		# user_id = selected_user.index(user)
@@ -154,7 +154,7 @@ class itemPrediction:
 	def Rij_t1(self):
 		# Rij_t_dict = dict.fromkeys([i for i in range(20, self.time_num-1)], rij_dict)
 		# Rijt = np.ones((self.time_num, self.user_num, self.doc_num))
-		for time_id in range(1, self.time_num-1):  # t in time_sequence; count from 1
+		for time_id in range(0, self.time_num-1):  # t in time_sequence; count from 1
 			# rij_dict = dict.fromkeys([i for i in range(self.user_num)], [])
 			thread1 = thread_each_time("Thread-" + str(time_id), time_id, self.doc_num, self.gamma, self.topic_assign_np,
 									   self.Rijt, self.eta, self.user_interest_Uit_hat, self.user_interest)
@@ -172,6 +172,7 @@ if __name__ == '__main__':
 	parser.add_argument("-i", "--iteround", default=1, help="Number of iterations")
 	parser.add_argument("-r", "--root_dir", default='./', help="Root dictionary")
 	parser.add_argument("-tt", "--topic_type", default='DMM', help="Root dictionary")
+	parser.add_argument("-tn", "--topic_num", default='10', help="Root dictionary")
 
 	args = parser.parse_args()
 
@@ -183,6 +184,7 @@ if __name__ == '__main__':
 	iteround = args.iteround
 	rootDir = args.root_dir
 	topic_type = args.topic_type
+	topic_num = int(args.topic_num)
 
 	IP = itemPrediction()
 	IP.Rij_t1()
