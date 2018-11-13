@@ -49,6 +49,8 @@ class PMF(object):
 		# 1-p-i, 2-m-c
 		num_user = int(max(np.amax(train_vec[:, 0]), np.amax(test_vec[:, 0]))) + 1  # 第0列，user总数
 		num_item = int(max(np.amax(train_vec[:, 1]), np.amax(test_vec[:, 1]))) + 1  # 第1列，movie总数
+		# num_user = 1892
+		# num_item = 12316
 
 		incremental = False  # 增量
 		if (not incremental) or (self.w_Item is None):
@@ -66,8 +68,8 @@ class PMF(object):
 				self.w_Item = np.loadtxt(self.topic_file)  # .T
 			# self.w_Item = 0.1 * np.random.randn(num_item, self.num_feat)  # numpy.random.randn 电影 M x D 正态分布矩阵
 			# self.w_User = 0.1 * np.random.randn(num_user, self.num_feat)  # numpy.random.randn 用户 N x D 正态分布矩阵
-			self.w_User = 0.1 * np.random.randn((self.time_num, num_user, self.num_feat))  # numpy.random.randn 用户 T x N x D 正态分布矩阵
-			self.w_User_hat = 0.1 * np.random.randn((self.time_num, num_user, self.num_feat))  # numpy.random.randn 用户 T x N x D 正态分布矩阵
+			self.w_User = 0.1 * np.random.randn(self.time_num, num_user, self.num_feat)  # numpy.random.randn 用户 T x N x D 正态分布矩阵
+			self.w_User_hat = 0.1 * np.random.randn(self.time_num, num_user, self.num_feat)  # numpy.random.randn 用户 T x N x D 正态分布矩阵
 
 			self.w_Item_inc = np.zeros((num_item, self.num_feat))  # 创建电影 M x D 0矩阵
 			self.w_User_inc = np.zeros((num_user, self.num_feat))  # 创建用户 N x D 0矩阵
@@ -103,11 +105,15 @@ class PMF(object):
 
 					rawErr = pred_out - train_vec[shuffled_order[batch_idx], 2] + self.mean_inv
 
+					# print (1 - self.eta[batch_UserID])
+
+					# print self.sum_userh(batch_UserID, time_id)
 					# Compute gradients
 					# ?????
+					# print self.sum_userh(batch_UserID, time_id)
 					Ix_User = 2 * np.multiply(rawErr[:, np.newaxis], self.w_Item[batch_ItemID, :]) \
 							  + self._lambda * (self.w_User[time_id][batch_UserID, :] - self.Uit_hat(batch_UserID, time_id)) \
-							  + self._lambda * (1- self.eta[batch_UserID]) * (self.w_User[time_id+1][batch_UserID, :] - self.Uit_hat(batch_UserID, time_id+1)) \
+							  + self._lambda * np.multiply((1- self.eta[batch_UserID])[:, np.newaxis], (self.w_User[time_id+1][batch_UserID, :] - self.Uit_hat(batch_UserID, time_id+1))) \
 							  + self._lambda * self.sum_userh(batch_UserID, time_id)
 
 					Ix_Item = 2 * np.multiply(rawErr[:, np.newaxis], self.w_User[time_id][batch_UserID, :]) \
@@ -154,7 +160,7 @@ class PMF(object):
 	def sum_userh(self, batch_UserID, time_id):
 		sum =[]
 		for uid in batch_UserID:
-			sum_userh = 0.0
+			sum_userh = [0.0 for i in range(self.num_feat)]
 			user_h = self.neighbors(uid, time_id, 0)
 			for h in user_h:
 				if h > selected_user[-1]:
@@ -164,7 +170,7 @@ class PMF(object):
 				eta_h = self.eta[uid_h]
 				sum_userh += gamma_h * self.L_hit(uid_h, uid, time_id, eta_h) * (self.Uit_hat([uid_h], time_id + 1) - self.w_User[time_id+1][uid_h, :])
 			sum.append(sum_userh)
-		return np.array(sum)
+		return np.array(sum).reshape(self.batch_size, self.num_feat)
 
 	def Uit_hat(self, uid_list, time_id):  # user i
 		Uit_hat = []
