@@ -15,7 +15,7 @@ class PMF(object):
 		self.maxepoch = maxepoch  # Number of epoch before stop,
 		self.num_batches = num_batches  # Number of batches in each epoch (for SGD optimization),
 		self.batch_size = batch_size  # Number of training samples used in each batches (for SGD optimization)
-
+		# self.user_num = user_num
 		self.w_Item = None  # Item feature vectors
 		self.w_User = None  # User feature vectors
 		self.w_User_hat = None
@@ -68,10 +68,12 @@ class PMF(object):
 				self.w_Item = np.loadtxt(self.topic_file)  # .T
 			# self.w_Item = 0.1 * np.random.randn(num_item, self.num_feat)  # numpy.random.randn 电影 M x D 正态分布矩阵
 			# self.w_User = 0.1 * np.random.randn(num_user, self.num_feat)  # numpy.random.randn 用户 N x D 正态分布矩阵
-			self.w_User = 0.1 * np.random.randn(self.time_num, num_user, self.num_feat)  # numpy.random.randn 用户 T x N x D 正态分布矩阵
-			self.w_User_hat = 0.1 * np.random.randn(self.time_num, num_user, self.num_feat)  # numpy.random.randn 用户 T x N x D 正态分布矩阵
+			self.w_User = 0.1 * np.random.randn(self.time_num, num_user,
+												self.num_feat)  # numpy.random.randn 用户 T x N x D 正态分布矩阵
+			self.w_User_hat = 0.1 * np.random.randn(self.time_num, num_user,
+													self.num_feat)  # numpy.random.randn 用户 T x N x D 正态分布矩阵
 
-			self.w_Item_inc = np.zeros((num_item, self.num_feat))  # 创建电影 M x D 0矩阵
+			# self.w_Item_inc = np.zeros((num_item, self.num_feat))  # 创建电影 M x D 0矩阵
 			self.w_User_inc = np.zeros((num_user, self.num_feat))  # 创建用户 N x D 0矩阵
 
 			self.gamma = (np.random.randint(10, size=num_user)) * 0.1
@@ -84,11 +86,11 @@ class PMF(object):
 			shuffled_order = np.arange(train_vec.shape[0])  # 根据记录数创建等差array
 			np.random.shuffle(shuffled_order)  # 用于将一个列表中的元素打乱
 
-
 			# Batch update
-			for batch in range(self.num_batches):  # 每次迭代要使用的数据量
-				for time_id in range(0, self.time_num - 1):
-					print("Time: %s" % time_id)
+			for time_id in range(0, self.time_num - 1):
+				for batch in range(self.num_batches):  # 每次迭代要使用的数据量
+
+					print("Time: %s, batch: %s" % (time_id, batch))
 					# print "epoch %d batch %d" % (self.epoch, batch+1)
 
 					test = np.arange(self.batch_size * batch, self.batch_size * (batch + 1))
@@ -116,22 +118,22 @@ class PMF(object):
 							  + self._lambda * np.multiply((1- self.eta[batch_UserID])[:, np.newaxis], (self.w_User[time_id+1][batch_UserID, :] - self.Uit_hat(batch_UserID, time_id+1))) \
 							  + self._lambda * self.sum_userh(batch_UserID, time_id)
 
-					Ix_Item = 2 * np.multiply(rawErr[:, np.newaxis], self.w_User[time_id][batch_UserID, :]) \
-							  + self._lambda * (self.w_Item[batch_ItemID, :])  # np.newaxis :increase the dimension
+					# Ix_Item = 2 * np.multiply(rawErr[:, np.newaxis], self.w_User[time_id][batch_UserID, :]) \
+					# 		  + self._lambda * (self.w_Item[batch_ItemID, :])  # np.newaxis :increase the dimension
 
-					dw_Item = np.zeros((num_item, self.num_feat))
+					# dw_Item = np.zeros((num_item, self.num_feat))
 					dw_User = np.zeros((num_user, self.num_feat))
 
 					# loop to aggreate the gradients of the same element
 					for i in range(self.batch_size):
-						dw_Item[batch_ItemID[i], :] += Ix_Item[i, :]
+						# dw_Item[batch_ItemID[i], :] += Ix_Item[i, :]
 						dw_User[batch_UserID[i], :] += Ix_User[i, :]
 
 					# Update with momentum
-					self.w_Item_inc = self.momentum * self.w_Item_inc + self.epsilon * dw_Item / self.batch_size
+					# self.w_Item_inc = self.momentum * self.w_Item_inc + self.epsilon * dw_Item / self.batch_size
 					self.w_User_inc = self.momentum * self.w_User_inc + self.epsilon * dw_User / self.batch_size
 
-					self.w_Item = self.w_Item - self.w_Item_inc
+					# self.w_Item = self.w_Item - self.w_Item_inc
 					self.w_User[time_id] = self.w_User[time_id] - self.w_User_inc
 
 					# Compute Objective Function after

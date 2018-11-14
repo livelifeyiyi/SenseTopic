@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -13,9 +14,13 @@ if __name__ == "__main__":
 	for time_id in range(time_num):
 		for user_id in range(user_num):
 			for item_id in range(item_num):
-				data_t.append([user_id, item_id, Rij[time_id][user_id][item_id], time_id])
-	ratings = np.array(data_t)'''
-	ratings = np.load(rootDir+"Rijt_rating_test.npy")
+				rijt = Rij[time_id][user_id][item_id]
+				if rijt != 0:
+					data_t.append([user_id, item_id, rijt, time_id])
+	ratings = np.array(data_t)
+	np.save("Rijt_rating_nozero.npy", ratings)
+	'''
+	ratings = np.load(rootDir+"Rijt_rating_nozero.npy")
 
 	pmf = PMF(topic_file=rootDir+"lastfmDMM.theta", topic_type="LSTM", time_num=8, rootDir=rootDir)
 	# pmf.set_params({"num_feat": 10, "epsilon": 1, "_lambda": 0.1, "momentum": 0.8, "maxepoch": 10, "num_batches": 100,
