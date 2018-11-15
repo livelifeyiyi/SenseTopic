@@ -6,21 +6,19 @@ from profileEvolution_PMF import PMF
 
 if __name__ == "__main__":
 	rootDir = 'E:\\code\\SN2\\lastfm-2k\\'
-
+	'''from topic_nan_id import nan_id
 	print("Reading Actual_rij_t.npy file......")
-	'''Rij = np.load(rootDir + 'Actual_Rij_t.npy')  # Rij
-	time_num, user_num, item_num = Rij.shape[0], Rij.shape[1], Rij.shape[2]
+	Rij = np.load(rootDir + 'Rijt_rating_nozero.npy')  # Rij
+	id_num = Rij.shape[0]
 	data_t = []
-	for time_id in range(time_num):
-		for user_id in range(user_num):
-			for item_id in range(item_num):
-				rijt = Rij[time_id][user_id][item_id]
-				if rijt != 0:
-					data_t.append([user_id, item_id, rijt, time_id])
+	for idd in range(id_num):
+		item_id = Rij[idd, 1]
+		if item_id not in nan_id:
+			data_t.append(Rij[idd])
 	ratings = np.array(data_t)
-	np.save("Rijt_rating_nozero.npy", ratings)
+	np.save("Rijt_rating_nozero_nonan.npy", ratings)
 	'''
-	ratings = np.load(rootDir+"Rijt_rating_nozero.npy")
+	ratings = np.load(rootDir+"Rijt_rating_nozero_nonan.npy")
 
 	pmf = PMF(topic_file=rootDir+"lastfmDMM.theta", topic_type="LSTM", time_num=8, rootDir=rootDir)
 	# pmf.set_params({"num_feat": 10, "epsilon": 1, "_lambda": 0.1, "momentum": 0.8, "maxepoch": 10, "num_batches": 100,

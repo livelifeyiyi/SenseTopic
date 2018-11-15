@@ -7,7 +7,7 @@ from selected_user import selected_user
 
 
 class PMF(object):
-	def __init__(self, topic_file, topic_type, time_num, rootDir, num_feat=10, epsilon=1, _lambda=0.1, momentum=0.8, maxepoch=20, num_batches=10, batch_size=1000):
+	def __init__(self, topic_file, topic_type, time_num, rootDir, num_feat=10, epsilon=1, _lambda=0.1, momentum=0.8, maxepoch=1000, num_batches=20, batch_size=1000):
 		self.num_feat = num_feat  # Number of latent features,
 		self.epsilon = epsilon  # learning rate,
 		self._lambda = _lambda  # L2 regularization,
@@ -81,7 +81,9 @@ class PMF(object):
 
 		while self.epoch < self.maxepoch:  # 检查迭代次数
 			self.epoch += 1
-
+			if self.epoch % 200 == 0:
+				np.save("w_user_%s.npy" % self.epoch, self.w_User)
+				np.save("w_user_hat_%s.npy" % self.epoch, self.w_User_hat)
 			# Shuffle training truples
 			shuffled_order = np.arange(train_vec.shape[0])  # 根据记录数创建等差array
 			np.random.shuffle(shuffled_order)  # 用于将一个列表中的元素打乱
@@ -108,7 +110,7 @@ class PMF(object):
 					rawErr = pred_out - train_vec[shuffled_order[batch_idx], 2] + self.mean_inv
 
 					# print (1 - self.eta[batch_UserID])
-
+					# print rawErr
 					# print self.sum_userh(batch_UserID, time_id)
 					# Compute gradients
 					# ?????
@@ -160,7 +162,7 @@ class PMF(object):
 							print('Training RMSE: %f, Test RMSE %f' % (self.rmse_train[-1], self.rmse_test[-1]))
 
 	def sum_userh(self, batch_UserID, time_id):
-		sum =[]
+		sum = []
 		for uid in batch_UserID:
 			sum_userh = [0.0 for i in range(self.num_feat)]
 			user_h = self.neighbors(uid, time_id, 0)
@@ -172,7 +174,7 @@ class PMF(object):
 				eta_h = self.eta[uid_h]
 				sum_userh += gamma_h * self.L_hit(uid_h, uid, time_id, eta_h) * (self.Uit_hat([uid_h], time_id + 1) - self.w_User[time_id+1][uid_h, :])
 			sum.append(sum_userh)
-		return np.array(sum).reshape(self.batch_size, self.num_feat)
+		return np.array(sum)  # np.array(sum).reshape(self.batch_size, self.num_feat)
 
 	def Uit_hat(self, uid_list, time_id):  # user i
 		Uit_hat = []
@@ -188,9 +190,12 @@ class PMF(object):
 				eta_h = self.eta[index_h]
 				sum_h += self.L_hit(index_h, uid, time_id-1, eta_h) * self.w_User[time_id-1][index_h, :]  # self.U_it(index_h, time_id-1)
 			uit_each = (1-gamma_i) * self.w_User[time_id-1][uid, :] + gamma_i * sum_h
-			Uit_hat.append(uit_each)  # self.U_it(user_id, time_id-1)
+			if len(uid_list) == 1:
+				Uit_hat = uit_each
+			else:
+				Uit_hat.append(uit_each)  # self.U_it(user_id, time_id-1)
 			self.w_User_hat[time_id][uid, :] = uit_each
-		return np.array(Uit_hat)
+		return np.array(Uit_hat)  # np.array(Uit_hat)
 
 	def neighbors(self, user_id, time, flag):
 		# user id
