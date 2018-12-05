@@ -144,12 +144,14 @@ class itemPrediction:
 			self.gamma = np.load(self.rootDir + self.topic_type + '_gamma_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
-			self.gamma = np.ones(self.user_num)
+			# self.gamma = np.ones(self.user_num)
+			self.gamma = (np.random.randint(10, size=self.user_num)) * 0.1
 		try:
 			self.eta = np.load(self.rootDir + self.topic_type + '_eta_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
-			self.eta = np.ones(self.user_num)
+			# self.eta = np.ones(self.user_num)
+			self.eta = (np.random.randint(10, size=self.user_num)) * 0.1
 
 	def Rij_t1(self):
 		# Rij_t_dict = dict.fromkeys([i for i in range(20, self.time_num-1)], rij_dict)

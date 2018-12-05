@@ -212,13 +212,34 @@ def filter_item_no_vec():
 	# np.savetxt(rootDir+'artistsID_id_havetags_havevecs.txt', np.asarray(new_np, dtype='int'))
 
 
+def filter_nan_topic():
+	topic_file = rootDir + "lastfmDMM.theta"
+	w_Item = np.loadtxt(topic_file)
+	for item_id in range(w_Item.shape[0]):
+		if np.isnan(w_Item[item_id]).any():
+			print item_id
+
+def filter_rijt():
+	Rij = np.load(rootDir + 'Actual_Rij_t.npy')  # Rij
+	time_num, user_num, item_num = Rij.shape[0], Rij.shape[1], Rij.shape[2]
+	data_t = []
+	for time_id in range(time_num):
+		for user_id in range(user_num):
+			for item_id in range(item_num):
+				rijt = Rij[time_id][user_id][item_id]
+				if rijt != 0:
+					data_t.append([user_id, item_id, rijt, time_id])
+	ratings = np.array(data_t)
+	np.save("Rijt_rating_nozero.npy", ratings)
+
 if __name__ == '__main__':
 	rootDir = "E:\\code\\SN2\\lastfm-2k\\"
 	# get_distinct_userID()
 	# get_index_tags()
-	get_R_ui_t()
+	# get_R_ui_t()
 	# get_doc_dictionary()
 	# get_google_vec()
 	# filter_item_no_vec()
 	# get_neighbors()
 	# get_friend_type()
+	filter_nan_topic()
