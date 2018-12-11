@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from profileEvolution_PMF import PMF
 
 if __name__ == "__main__":
-	rootDir = 'E:\\code\\SN2\\lastfm-2k\\'
+	rootDir = './'  # 'E:\\code\\SN2\\lastfm-2k\\'
 	'''from topic_nan_id import nan_id  # 主题模型中取值nan的文档id号
 	print("Reading Actual_rij_t.npy file......")
 	Rij = np.load(rootDir + 'Rijt_rating_nozero.npy')  # Rij
@@ -20,7 +20,7 @@ if __name__ == "__main__":
 	'''
 	ratings = np.load(rootDir+"Rijt_rating_nozero_nonan.npy")
 
-	pmf = PMF(topic_file=rootDir+"lastfmDMM.theta", topic_type="LSTM", time_num=8, rootDir=rootDir)
+	pmf = PMF(topic_file=rootDir+"lastfmDMM_topic5.theta", topic_type="LSTM", time_num=8, rootDir=rootDir)
 	# pmf.set_params({"num_feat": 10, "epsilon": 1, "_lambda": 0.1, "momentum": 0.8, "maxepoch": 10, "num_batches": 100,
 	# 				"batch_size": 1000, "topic_file": "lastfmDMM.theta", "topic_type": "LSTM", "time_num": 8, "rootDir": rootDir})
 

@@ -15,7 +15,10 @@ class evaluatePrediction:
 		print("Reading Actual_rij_t.npy file......")
 		self.R_ij = np.load(self.rootDir + 'Actual_Rij_t.npy')
 		print("Reading Predicted Rij file......")
-		self.pred_R_ij = np.load(self.rootDir + '/predictRes/Predict_Rij_t'+str(time_num)+'.npy')
+		self.pred_R_ij = np.load(self.rootDir + 'Predict_Rij_t' + str(time_num)+'.npy')  #  + '/predict_lambda1/Predict_Rij_t'
+		# with codecs.open(self.rootDir + '/Predict_Rij_t' + str(time_num)+'.json', mode='r') as infile:
+		# 	self.pred_R_ij = json.load(infile)
+			# self.pred_R_ij = json.load(self.rootDir + '/Predict_Rij_t' + str(time_num)+'.json')
 		# for test
 		# self.R_ij = np.ones((self.time_num, self.user_num, self.doc_num), dtype='int')
 		# self.R_ij = np.load(self.rootDir + 'Actual_Rij_1.npy')
@@ -77,7 +80,7 @@ class evaluatePrediction:
 			# print("user_id: " + str(user_id))
 			'''item_sum = 0.0
 			item_sum_mae = 0.0'''
-			act_ri = self.R_ij[time][user_id]
+			act_ri = self.R_ij[int(time)][user_id]
 			# act_ri = self.R_ij[user_id]
 			if sum(act_ri) == 0:
 				continue
@@ -111,10 +114,10 @@ class evaluatePrediction:
 						if pred_itemid in act_rij_nozero.keys():
 							sumv += 1.0/(index+1)
 							accurate += 1.0
-
-				print accurate/item_num  # 1.0/num*sumv,
-				# totalsum.append(1.0/num*sumv)
-				totalsum_accu.append(accurate/item_num)
+				if item_num != 0 and num != 0 and sumv != 0:
+					print accurate/item_num, 1.0/num*sumv
+					totalsum.append(1.0/item_num)  # num*sumv
+					totalsum_accu.append(accurate/item_num)
 				'''
 				pred_ri_max_index = map(list(pred_ri).index, heapq.nlargest(len(act_rij_nozero), pred_ri))
 				accurate = 0.0
@@ -123,18 +126,18 @@ class evaluatePrediction:
 						accurate += 1
 				print accurate/len(act_rij_nozero)'''
 		print("Accuracy: " + str(np.mean(np.array(totalsum_accu))))
-		#  "TOTAL MRR:"+ + str(np.mean(np.array(totalsum)))
+		print("MRR:" + str(np.mean(np.array(totalsum))))
 
 if __name__ == '__main__':
 	# rootdir = 'E:/code/SN2/lastfm-2k/'
-	'''parser = argparse.ArgumentParser()
-	parser.add_argument("-t", help="Time number")
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-time", help="Time number")
 	args = parser.parse_args()
 
-	time_id = args.t'''
+	time_id = args.time
 	# evaluate = evaluatePrediction('E:\\code\\SN2\\lastfm-2k\\', "E:\\code\\SN2\\lastfm-2k\\artistsID_id_havetags_havevecs.txt", 1)
 	# for time_id in range(0, 7):
-	evaluate = evaluatePrediction('E:/code/SN2/lastfm-2k/', 6)  #  rootdir+"./artistsID_id_havetags_havevecs.txt"
+	evaluate = evaluatePrediction('./', time_id)  #  rootdir+"./artistsID_id_havetags_havevecs.txt"
 	# evaluate.RMSE()
 	evaluate.MRR()
 	# evaluate.evaluate_test()

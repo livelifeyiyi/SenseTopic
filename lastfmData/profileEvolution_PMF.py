@@ -7,7 +7,7 @@ from selected_user import selected_user
 
 
 class PMF(object):
-	def __init__(self, topic_file, topic_type, time_num, rootDir, num_feat=10, epsilon=1, _lambda=0.1, momentum=0.8, maxepoch=1000, num_batches=20, batch_size=1000):
+	def __init__(self, topic_file, topic_type, time_num, rootDir, num_feat=10, epsilon=1, _lambda=1, momentum=0.8, maxepoch=1000, num_batches=20, batch_size=1000):
 		self.num_feat = num_feat  # Number of latent features,
 		self.epsilon = epsilon  # learning rate,
 		self._lambda = _lambda  # L2 regularization,
@@ -76,8 +76,10 @@ class PMF(object):
 			# self.w_Item_inc = np.zeros((num_item, self.num_feat))  # 创建电影 M x D 0矩阵
 			self.w_User_inc = np.zeros((num_user, self.num_feat))  # 创建用户 N x D 0矩阵
 
-			self.gamma = (np.random.randint(10, size=num_user)) * 0.1
-			self.eta = (np.random.randint(10, size=num_user)) * 0.1
+			# self.gamma = (np.random.randint(10, size=num_user)) * 0.1
+			self.gamma = np.array([0.6 for i in range(num_user)])
+			# self.eta = (np.random.randint(10, size=num_user)) * 0.1
+			self.eta = np.array([0.4 for i in range(num_user)])
 
 		while self.epoch < self.maxepoch:  # 检查迭代次数
 			self.epoch += 1

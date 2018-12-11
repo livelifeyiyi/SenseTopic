@@ -148,12 +148,14 @@ class itemPrediction:
 			self.gamma = np.load(self.rootDir + self.topic_type + '_gamma_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
-			self.gamma = (np.random.randint(10, size=self.user_num)) * 0.1
+			self.gamma = np.array([0.6 for i in range(self.user_num)])
+			# self.gamma = (np.random.randint(10, size=self.user_num)) * 0.1
 		try:
 			self.eta = np.load(self.rootDir + self.topic_type + '_eta_' + self.iteround + '.npy')
 		except Exception as e:
 			print e
-			self.eta = (np.random.randint(10, size=self.user_num)) * 0.1
+			self.eta = np.array([0.4 for i in range(self.user_num)])
+			# self.eta = (np.random.randint(10, size=self.user_num)) * 0.1
 
 	def Rij_t1(self):
 		# Rij_t_dict = dict.fromkeys([i for i in range(20, self.time_num-1)], rij_dict)
@@ -170,13 +172,13 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-topicFile", help="Topic assignment file")
 	parser.add_argument("-mid_dir", help="The dictionary of mid-id map file")
-	parser.add_argument("-f", "--feature_dimension", default=50, help="Dimension of features (topic number)")
+	parser.add_argument("-f", "--feature_dimension", default=100, help="Dimension of features (topic number)")
 	parser.add_argument("-u", "--user_num", default=2000, help="Number of users to build subnetwork")
 	parser.add_argument("-t", "--time_num", default=31, help="Number of time sequence")
-	parser.add_argument("-i", "--iteround", default=1, help="Number of iterations")
+	parser.add_argument("-i", "--iteround", default=200, help="Number of iterations")
 	parser.add_argument("-r", "--root_dir", default='./', help="Root dictionary")
 	parser.add_argument("-tt", "--topic_type", default='DMM', help="Root dictionary")
-	parser.add_argument("-tn", "--topic_num", default='10', help="Root dictionary")
+	# parser.add_argument("-tn", "--topic_num", default='10', help="Root dictionary")
 
 	args = parser.parse_args()
 
@@ -188,7 +190,7 @@ if __name__ == '__main__':
 	iteround = args.iteround
 	rootDir = args.root_dir
 	topic_type = args.topic_type
-	topic_num = int(args.topic_num)
+	topic_num = int(args.feature_dimension)
 
 	IP = itemPrediction()
 	IP.Rij_t1()
